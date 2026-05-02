@@ -21,7 +21,7 @@
 	},
 	"type": "module",
 	"scripts": {
-		"dev": "turbo dev",
+		"dev": "turbo dev db:studio",
 		"build": "turbo build",
 		"check-types": "turbo check-types",
 		"dev:web": "turbo -F web dev",
