@@ -1,0 +1,3 @@
+{
+	"extends": "@basalt/config/tsconfig.base.json"
+}

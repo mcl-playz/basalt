@@ -1,0 +1,23 @@
+name: basalt
+
+services:
+  postgres:
+    image: postgres
+    container_name: basalt-postgres
+    environment:
+      POSTGRES_DB: basalt
+      POSTGRES_USER: basalt
+      POSTGRES_PASSWORD: Bkrsu6PC3r9MBIiCvyWhEnSzn56N7MT3
+    ports:
+      - "5432:5432"
+    volumes:
+      - basalt_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  basalt_postgres_data:

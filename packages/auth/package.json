@@ -1,0 +1,24 @@
+{
+	"name": "@basalt/auth",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@basalt/db": "workspace:*",
+		"@basalt/env": "workspace:*",
+		"better-auth": "catalog:",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@basalt/config": "workspace:*",
+		"typescript": "catalog:"
+	}
+}
