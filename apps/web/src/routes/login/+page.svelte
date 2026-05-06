@@ -1,6 +1,8 @@
 <script lang="ts">
 import { authClient } from "$lib/auth-client";
 	import { store } from "$lib/message/store";
+	import { Button, Label } from "bits-ui";
+	import { EyeClosedIcon, EyeIcon, EyeSlashIcon } from "phosphor-svelte";
 
 let email = $state("");
 let password = $state("");
@@ -30,48 +32,62 @@ async function handleLogin(e: Event) {
 </script>
 
 <div class="min-h-screen flex items-center justify-center px-4">
-	<div class="max-w-md w-full space-y-8 bg-neutral-900 p-8 rounded-xl shadow-lg">
-		<div>
-			<h2 class="text-center text-3xl font-extrabold text-white">Welcome Back</h2>
-			<p class="mt-2 text-center text-sm text-neutral-400">
-				Please sign in to your account
-			</p>
-		</div>
+	<div class="max-w-xs w-full">
+        <div class="flex items-center justify-center gap-2">
+            <div class="w-6 h-6 bg-indigo-600 rounded shadow-lg shadow-indigo-500/20"></div>
+            <h2 class="text-center text-3xl font-extrabold text-white">Basalt</h2>
+        </div>
+		
 
-		<form class="mt-8 space-y-6" onsubmit={handleLogin}>
-			<div class="space-y-4">
+		<form class="mt-3 space-y-6" onsubmit={handleLogin}>
+			<div class="space-y-2">
 				<!-- Email Input -->
 				<div>
-					<label for="email" class="block text-sm font-medium text-neutral-400">Email Address</label>
+                    <Label.Root
+                        for="email"
+                        class="text-sm font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-neutral-400"
+                    >
+                        Email Address
+                    </Label.Root>
 					<input
 						bind:value={email}
 						id="email"
 						type="email"
+						class="block w-full {email && !isEmailValid ? 'border-red-300' : ""}"
+						placeholder="john.smith@example.com"
 						required
-						class="mt-1 block w-full px-3 py-2 border {email && !isEmailValid ? 'border-red-300' : 'border-neutral-700'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-						placeholder="you@example.com"
 					/>
 				</div>
 
 				<!-- Password Input -->
 				<div>
-					<label for="password" class="block text-sm font-medium text-neutral-400">Password</label>
-					<div class="relative mt-1">
+					<Label.Root
+                        for="password"
+                        class="text-sm font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-neutral-400"
+                    >
+                        Password
+                    </Label.Root>
+					<div class="relative">
 						<input
 							bind:value={password}
 							id="password"
 							type={showPassword ? "text" : "password"}
-							required
-							class="block w-full px-3 py-2 border border-neutral-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+							class="block w-full"
 							placeholder={showPassword ? 'Password' : '••••••••'}
+							required
 						/>
-						<button 
-							type="button"
+						<button
+                            type="button"
 							onclick={() => showPassword = !showPassword}
-							class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-						>
-							{showPassword ? 'Hide' : 'Show'}
-						</button>
+							class="absolute inset-y-0 right-0 p-3 flex items-center cursor-pointer text-neutral-400 hover:text-white transition-colors"
+                            data-minimal
+                        >
+                            {#if showPassword}
+                                <EyeSlashIcon class="size-5" />
+                            {:else}
+                                <EyeIcon class="size-5" />
+                            {/if}
+                        </button>
 					</div>
 				</div>
 			</div>
@@ -81,17 +97,18 @@ async function handleLogin(e: Event) {
 			{/if}
 
 			<div>
-				<button
+				<Button.Root
 					disabled={!canSubmit}
 					type="submit"
-					class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    class="group relative w-full px-1 py-2.5"
+					data-primary
 				>
 					{#if loading}
 						<span class="animate-pulse">Authenticating...</span>
 					{:else}
 						Sign in
 					{/if}
-				</button>
+                </Button.Root>
 			</div>
 		</form>
 	</div>
