@@ -3,37 +3,12 @@ import * as schema from "@basalt/db/schema/auth";
 import { env } from "@basalt/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError, createAuthMiddleware } from "better-auth/api";
-import { ImapFlow } from "imapflow";
+import { credentials } from "better-auth-credentials-plugin";
 
-// Sentinel value stored in `account.password` for accounts whose credentials live in an external system.
-const EXTERNAL_AUTH_SENTINEL = "__external_auth__";
+import { encryptSecret } from "./crypto";
+import { IMAP_PROVIDER_ID, verifyImapCredentials } from "./imap";
 
-async function verifyImapCredentials(
-	email: string,
-	password: string,
-): Promise<boolean> {
-	const client = new ImapFlow({
-		host: env.IMAP_HOST,
-		port: env.IMAP_PORT,
-		// Implicit TLS only on port 993; otherwise use STARTTLS upgrade.
-		secure: env.IMAP_PORT === 993,
-		auth: { user: email, pass: password },
-		tls: { rejectUnauthorized: false },
-		logger: false,
-	});
-
-	try {
-		await client.connect();
-		await client.logout();
-		return true;
-	} catch (_err) {
-		try {
-			client.close();
-		} catch {}
-		return false;
-	}
-}
+export { getImapClient, IMAP_PROVIDER_ID } from "./imap";
 
 export function createAuth() {
 	const db = createDb();
@@ -43,70 +18,7 @@ export function createAuth() {
 			provider: "pg",
 			schema: schema,
 		}),
-		hooks: {
-			before: createAuthMiddleware(async (ctx) => {
-				if (ctx.path !== "/sign-in/email") return;
-
-				const email = ctx.body?.email as string | undefined;
-				const password = ctx.body?.password as string | undefined;
-
-				if (!email || !password) {
-					throw new APIError("BAD_REQUEST", {
-						message: "Email and password are required",
-					});
-				}
-
-				const ok = await verifyImapCredentials(email, password);
-				if (!ok) {
-					throw new APIError("UNAUTHORIZED", {
-						message: "Invalid email or password",
-					});
-				}
-
-				const existing =
-					await ctx.context.internalAdapter.findUserByEmail(email, {
-						includeAccounts: true,
-					});
-
-				if (!existing) {
-					const created =
-						await ctx.context.internalAdapter.createUser({
-							email,
-							name: email.split("@")[0] ?? email,
-							emailVerified: true,
-						});
-					await ctx.context.internalAdapter.createAccount({
-						userId: created.id,
-						providerId: "credential",
-						accountId: created.id,
-						password: EXTERNAL_AUTH_SENTINEL,
-						});
-						} else if (
-					!existing.accounts.some(
-						(a) => a.providerId === "credential",
-					)
-				) {
-					await ctx.context.internalAdapter.createAccount({
-						userId: existing.user.id,
-						providerId: "credential",
-						accountId: existing.user.id,
-						password: EXTERNAL_AUTH_SENTINEL,
-					});
-				}
-			}),
-		},
-        emailAndPassword: {
-			enabled: true,
-			disableSignUp: true,
-			password: {
-				hash: async () => EXTERNAL_AUTH_SENTINEL,
-				// Credentials are validated by the before-hook on /sign-in/email
-				// against the external auth source. Only allow sign-in for accounts
-				// provisioned through that path (i.e. carry the sentinel) so any
-				// stray credential account with a real hash cannot bypass.
-				verify: async ({ hash }) => hash === EXTERNAL_AUTH_SENTINEL,
-			},
-		},
+		emailAndPassword: { enabled: false },
 		trustedOrigins: [env.CORS_ORIGIN],
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.BETTER_AUTH_URL,
@@ -117,7 +29,36 @@ export function createAuth() {
 				httpOnly: true,
 			},
 		},
-		plugins: [],
+		plugins: [
+			credentials({
+				autoSignUp: true,
+				linkAccountIfExisting: true,
+				providerId: IMAP_PROVIDER_ID,
+				async callback(ctx, parsed) {
+					const ok = await verifyImapCredentials(parsed.email, parsed.password);
+					if (!ok) return null;
+
+					const encrypted = encryptSecret(parsed.password);
+
+					return {
+						email: parsed.email,
+						name: parsed.email.split("@")[0] ?? parsed.email,
+						emailVerified: true,
+						async onSignIn(userData, _user, account) {
+							if (account) {
+								await ctx.context.internalAdapter.updateAccount(account.id, {
+									password: encrypted,
+								});
+							}
+							return userData;
+						},
+						async onLinkAccount() {
+							return { password: encrypted };
+						},
+					};
+				},
+			}),
+		],
 	});
 }
 

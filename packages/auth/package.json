@@ -14,6 +14,7 @@
 		"@basalt/db": "workspace:*",
 		"@basalt/env": "workspace:*",
 		"better-auth": "catalog:",
+		"better-auth-credentials-plugin": "^0.5.2",
 		"dotenv": "catalog:",
 		"imapflow": "^1.3.3",
 		"zod": "catalog:"
