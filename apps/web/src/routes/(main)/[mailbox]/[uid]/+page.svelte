@@ -7,7 +7,7 @@
     let message = $state<Message>();
 
     $effect(() => {
-        if(!tabState.activeTab) return;
+        if(!tabState.activeTab || tabState.activeTab.type !== "message") return;
         store.getMessage(tabState.activeTab.mailbox, tabState.activeTab.uid)
             .then((result) => message = result)
     })

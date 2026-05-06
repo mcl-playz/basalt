@@ -3,11 +3,12 @@
 	import { authClient } from "$lib/auth-client";
 	import MessageCard from "$lib/components/MessageCard.svelte";
 	import { store } from "$lib/message/store";
-	import { getTabState } from "$lib/state.svelte";
+	import { getMailboxState, getTabState } from "$lib/state.svelte";
 	import type { Message } from "@basalt/types";
 
 	const sessionQuery = authClient.useSession();
 	const tabState = getTabState();
+	const mailboxState = getMailboxState();
 
 	let messages = $state<Message[]>([]);
 	let isLoading = $state(true);
@@ -19,7 +20,7 @@
 	});
 
 	$effect(() => {
-		const path = tabState.mailboxState.selected ?? "";
+		const path = mailboxState.selected ?? "";
 
         isLoading = true;
 		messages = [];
@@ -47,7 +48,7 @@
 	});
 
     function handleMessageSelect(msg: Message){
-        tabState.open({ type: "message", mailbox: msg.mailbox, uid: msg.uid, subject: msg.subject });
+        tabState.new({ type: "message", mailbox: msg.mailbox, uid: msg.uid, subject: msg.subject });
         goto(`/${msg.mailbox.toLocaleLowerCase()}/${msg.uid}`)
     }
 </script>
@@ -68,6 +69,6 @@
 	<div
 		class="flex flex-col items-center justify-center h-32 text-neutral-500"
 	>
-		<i>{tabState.mailboxState.selected} is empty.</i>
+		<i>{mailboxState.selected} is empty.</i>
 	</div>
 {/if}

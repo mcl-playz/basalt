@@ -9,12 +9,13 @@
 	import SearchPopup from "$lib/components/SearchPopup.svelte";
 	import { search } from "$lib/message/search";
     import { page } from "$app/state";
-	import { setTabState } from "$lib/state.svelte";
+	import { setMailboxState, setTabState } from "$lib/state.svelte";
 
     const { children } = $props();
 
-    const tabState = setTabState();
     const mailboxesQuery = createQuery(orpc.mail.getMailboxes.queryOptions());
+    const tabState = setTabState();
+    const mailboxState = setMailboxState();
 
     $effect(() => {
         const mailboxes = $mailboxesQuery.data?.mailboxes;
@@ -24,9 +25,9 @@
         const match = mailboxes.findIndex(x => slug === x.path.toLocaleLowerCase());
 
         if(match > -1){
-            tabState.mailboxState.select(mailboxes[match].path);
+            mailboxState.select(mailboxes[match].path);
         } else {
-            tabState.mailboxState.select(mailboxes[0].path);
+            mailboxState.select(mailboxes[0].path);
             goto(`/${mailboxes[0].path.toLowerCase()}`);
         }
 
@@ -37,7 +38,7 @@
         path.toLowerCase().includes(type.toLowerCase());
 
     function handleMailboxSelect(path: string) {
-        tabState.mailboxState.select(path);
+        mailboxState.select(path);
         goto(`/${path.toLowerCase()}`);
     }
 </script>
@@ -69,7 +70,7 @@
                 <Button.Root
                     onclick={() => handleMailboxSelect(mailbox.path)}
                     class="w-full flex text-sm transition-all px-2 py-1.5
-                    {tabState.mailboxState.selected === mailbox.path
+                    {mailboxState.selected === mailbox.path
                         ? 'bg-neutral-800 text-white font-medium shadow-xsxl'
                         : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'}"
                     data-minimal
