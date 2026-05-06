@@ -1,0 +1,115 @@
+<script lang="ts">
+    import { createQuery } from "@tanstack/svelte-query";
+    import "../../app.css";
+    import { orpc } from "$lib/orpc";
+    import { CaretDoubleLeftIcon, FireIcon, FolderIcon, MagnifyingGlassIcon, PaperPlaneTiltIcon, Path, PencilIcon, ScrollIcon, TrashIcon, TrayIcon } from "phosphor-svelte";
+    import { Button } from "bits-ui";
+    import { goto } from "$app/navigation";
+	import AccountMenu from "$lib/components/AccountMenu.svelte";
+	import SearchPopup from "$lib/components/SearchPopup.svelte";
+	import { search } from "$lib/message/search";
+    import { page } from "$app/state";
+	import { setTabState } from "$lib/state.svelte";
+
+    const { children } = $props();
+
+    const tabState = setTabState();
+    const mailboxesQuery = createQuery(orpc.mail.getMailboxes.queryOptions());
+
+    $effect(() => {
+        const mailboxes = $mailboxesQuery.data?.mailboxes;
+        if (!mailboxes) return;
+
+        const slug = page.params.mailbox;
+        const match = mailboxes.findIndex(x => slug === x.path.toLocaleLowerCase());
+
+        if(match > -1){
+            tabState.mailboxState.select(mailboxes[match].path);
+        } else {
+            tabState.mailboxState.select(mailboxes[0].path);
+            goto(`/${mailboxes[0].path.toLowerCase()}`);
+        }
+
+        search.init();
+    });
+
+    const isFolderType = (path: string, type: string) =>
+        path.toLowerCase().includes(type.toLowerCase());
+
+    function handleMailboxSelect(path: string) {
+        tabState.mailboxState.select(path);
+        goto(`/${path.toLowerCase()}`);
+    }
+</script>
+
+<div class="h-screen flex">
+    <aside class="w-64 flex flex-col shrink-0">
+        <div class="p-4 pr-3 h-14 flex items-center">
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 bg-indigo-600 rounded shadow-lg shadow-indigo-500/20"></div>
+                    <span class="font-bold tracking-tight text-white">Basalt</span>
+                </div>
+
+                <div class="flex gap-0.5">
+                    <SearchPopup>
+                        <Button.Root data-minimal class="p-1">
+                            <MagnifyingGlassIcon class="size-5" />
+                        </Button.Root>
+                    </SearchPopup>
+                    <Button.Root data-minimal class="p-1">
+                        <PencilIcon class="size-5" />
+                    </Button.Root>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-3 pt-0.5 space-y-1">
+            {#each $mailboxesQuery.data?.mailboxes as mailbox}
+                <Button.Root
+                    onclick={() => handleMailboxSelect(mailbox.path)}
+                    class="w-full flex text-sm transition-all px-2 py-1.5
+                    {tabState.mailboxState.selected === mailbox.path
+                        ? 'bg-neutral-800 text-white font-medium shadow-xsxl'
+                        : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'}"
+                    data-minimal
+                >
+                    <div class="flex items-center gap-3">
+                        {#if isFolderType(mailbox.path, "inbox")}
+                            <TrayIcon size="1.15rem" />
+                        {:else if isFolderType(mailbox.path, "sent")}
+                            <PaperPlaneTiltIcon size="1.15rem" />
+                        {:else if isFolderType(mailbox.path, "drafts")}
+                            <ScrollIcon size="1.15rem" />
+                        {:else if isFolderType(mailbox.path, "spam")}
+                            <FireIcon size="1.15rem" />
+                        {:else if isFolderType(mailbox.path, "trash")}
+                            <TrashIcon size="1.15rem" />
+                        {:else}
+                            <FolderIcon size="1.15rem" />
+                        {/if}
+                        {mailbox.name}
+                    </div>
+                </Button.Root>
+            {/each}
+        </nav>
+
+        <div class="p-2 flex justify-end">
+            <Button.Root data-minimal class="p-2 text-neutral-500 hover:text-white">
+                <CaretDoubleLeftIcon size="1rem" />
+            </Button.Root>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-w-0">
+        <!-- Header -->
+        <header class="h-14 flex justify-end px-2 sticky top-0 z-10 mr-2">
+            <AccountMenu />
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto rounded-lg bg-neutral-900 mr-4">
+            {@render children()}
+        </main>
+    </div>
+</div>

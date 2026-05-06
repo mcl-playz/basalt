@@ -1,5 +1,6 @@
 <script lang="ts">
 import { authClient } from "$lib/auth-client";
+	import { store } from "$lib/message/store";
 
 let email = $state("");
 let password = $state("");
@@ -15,14 +16,16 @@ async function handleLogin(e: Event) {
 	loading = true;
 	errorMessage = "";
 
-	try {
-		console.log("Logging in with:", { email, password });
-		await authClient.signIn.email({ email, password });
-	} catch (err) {
-		errorMessage = "Invalid email or password. Please try again.";
-	} finally {
-		loading = false;
-	}
+    await authClient.signIn.credentials({ email, password, fetchOptions: {
+        onSuccess: async () => {
+            await store.requestPersistentStorage().then();
+            window.location.assign("/");
+        },
+        onError: (e) => {
+            errorMessage = "Invalid email or password. Please try again.";
+        }
+    }});
+    loading = false;
 }
 </script>
 
@@ -60,12 +63,12 @@ async function handleLogin(e: Event) {
 							type={showPassword ? "text" : "password"}
 							required
 							class="block w-full px-3 py-2 border border-neutral-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-							placeholder="••••••••"
+							placeholder={showPassword ? 'Password' : '••••••••'}
 						/>
 						<button 
 							type="button"
 							onclick={() => showPassword = !showPassword}
-							class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-neutral-400 hover:text-indigo-600"
+							class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-neutral-400 hover:text-white transition-colors cursor-pointer"
 						>
 							{showPassword ? 'Hide' : 'Show'}
 						</button>
