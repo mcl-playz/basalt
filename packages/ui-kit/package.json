@@ -1,0 +1,38 @@
+{
+	"name": "@basalt/ui-kit",
+	"type": "module",
+	"sideEffects": [
+		"**/*.css"
+	],
+	"exports": {
+		".": {
+			"default": "./src/lib/index.ts"
+		},
+		"./styles.css": "./src/lib/styles.css",
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {
+		"build": "svelte-kit sync && svelte-package",
+		"check-types": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check": "biome check src"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"@basalt/config": "workspace:*",
+		"@sveltejs/adapter-auto": "^7.0.0",
+		"@sveltejs/kit": "^2.50.1",
+		"@sveltejs/package": "^2.5.7",
+		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@tailwindcss/vite": "^4.1.12",
+		"publint": "^0.3.17",
+		"svelte": "^5.48.2",
+		"svelte-check": "^4.3.5",
+		"tailwindcss": "^4.1.12",
+		"typescript": "catalog:",
+		"vite": "^7.3.1"
+	}
+}
