@@ -51,7 +51,7 @@
 	let isUnread = $derived(!message.read);
 </script>
 
-<button class="text-left w-full h-11 group flex items-center gap-4 px-3 py-2 transition-colors cursor-pointer rounded-lg
+<button class="text-left w-full h-11 group flex items-center gap-4 px-3 py-2 transition-colors cursor-pointer 
     {message.read == false ? "bg-neutral-800/75" : "hover:bg-neutral-800/40"} hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.25)]"
     onclick={onclick}
 >

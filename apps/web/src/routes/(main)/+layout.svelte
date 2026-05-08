@@ -2,20 +2,23 @@
     import { createQuery } from "@tanstack/svelte-query";
     import "../../app.css";
     import { orpc } from "$lib/orpc";
-    import { CaretDoubleLeftIcon, FireIcon, FolderIcon, MagnifyingGlassIcon, PaperPlaneTiltIcon, Path, PencilIcon, ScrollIcon, TrashIcon, TrayIcon } from "phosphor-svelte";
+    import { CaretDoubleLeftIcon, EnvelopeIcon, FireIcon, FolderIcon, MagnifyingGlassIcon, PaperclipIcon, PaperPlaneTiltIcon, Path, PencilIcon, ScrollIcon, TrashIcon, TrayIcon } from "phosphor-svelte";
     import { Button } from "bits-ui";
     import { goto } from "$app/navigation";
 	import AccountMenu from "$lib/components/AccountMenu.svelte";
 	import SearchPopup from "$lib/components/SearchPopup.svelte";
+    import Tab from "$lib/components/Tab.svelte";
 	import { search } from "$lib/message/search";
     import { page } from "$app/state";
 	import { setMailboxState, setTabState } from "$lib/state.svelte";
+	import type { Mailbox } from "@basalt/types";
 
     const { children } = $props();
 
     const mailboxesQuery = createQuery(orpc.mail.getMailboxes.queryOptions());
     const tabState = setTabState();
     const mailboxState = setMailboxState();
+    let mailbox = $state<Mailbox | null>();
 
     $effect(() => {
         const mailboxes = $mailboxesQuery.data?.mailboxes;
@@ -26,9 +29,11 @@
 
         if(match > -1){
             mailboxState.select(mailboxes[match].path);
+            mailbox = mailboxes[match];
         } else {
             mailboxState.select(mailboxes[0].path);
             goto(`/${mailboxes[0].path.toLowerCase()}`);
+            mailbox = mailboxes[0];
         }
 
         search.init();
@@ -39,8 +44,22 @@
 
     function handleMailboxSelect(path: string) {
         mailboxState.select(path);
+        tabState.select(null);
         goto(`/${path.toLowerCase()}`);
     }
+
+    $effect(() => {
+        let path = `/${mailboxState.selected?.toLocaleLowerCase()}`
+        if(tabState.activeTabId !== null){
+            if(tabState.activeTab?.type === "message"){
+                path += `/${tabState.activeTab.uid}`;
+            } else if(tabState.activeTab?.type === "attachment"){
+                path = `/${tabState.activeTab.file}`;
+            }
+        }
+
+        goto(path);
+    })
 </script>
 
 <div class="h-screen flex">
@@ -95,8 +114,9 @@
             {/each}
         </nav>
 
-        <div class="p-2 flex justify-end">
-            <Button.Root data-minimal class="p-2 text-neutral-500 hover:text-white">
+        <div class="p-2 flex justify-between">
+            <AccountMenu />
+            <Button.Root data-minimal class="pr-2 text-neutral-500 hover:text-white">
                 <CaretDoubleLeftIcon size="1rem" />
             </Button.Root>
         </div>
@@ -104,12 +124,22 @@
 
     <div class="flex-1 flex flex-col min-w-0">
         <!-- Header -->
-        <header class="h-14 flex justify-end px-2 sticky top-0 z-10 mr-2">
-            <AccountMenu />
+        <header class="flex justify-between items-center py-2 sticky top-0 z-10 m-0">
+            <div class="flex justify-start gap-1.5">
+                <Tab icon={TrayIcon} title={mailbox?.name ?? ""} selected={tabState.activeTabId === null} closeBtn={false} open={() => tabState.select(null)}/>
+                {#each tabState.tabs as tab}
+                    <Tab
+                        icon={tab.type == "message" ? EnvelopeIcon : PaperclipIcon}
+                        title={tab.title} selected={tabState.activeTabId === tab.id}
+                        open={() => tabState.select(tab.id)}
+                        close={() => tabState.close(tab.id)}
+                    />
+                {/each}
+            </div>
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto rounded-lg bg-neutral-900 mr-4">
+        <main class="flex-1 overflow-y-auto rounded-lg bg-neutral-900 mr-2">
             {@render children()}
         </main>
     </div>

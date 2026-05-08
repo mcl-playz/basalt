@@ -48,7 +48,7 @@
 	});
 
     function handleMessageSelect(msg: Message){
-        tabState.new({ type: "message", mailbox: msg.mailbox, uid: msg.uid, subject: msg.subject });
+        tabState.new({ type: "message", mailbox: msg.mailbox, uid: msg.uid, title: msg.subject });
         goto(`/${msg.mailbox.toLocaleLowerCase()}/${msg.uid}`)
     }
 </script>

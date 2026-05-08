@@ -2,19 +2,18 @@ import { getContext, setContext } from "svelte";
 
 interface BaseTab {
 	id: number;
+    title: string;
 }
 
 interface MessageTab extends BaseTab {
 	type: "message";
 	mailbox: string;
 	uid: number;
-	subject: string;
 }
 
 interface AttachmentTab extends BaseTab {
 	type: "attachment";
 	file: string;
-    fileName: string;
 }
 
 type Tab = MessageTab | AttachmentTab;

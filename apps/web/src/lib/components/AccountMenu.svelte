@@ -22,21 +22,22 @@
 </script>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger class="cursor-pointer">
+	<DropdownMenu.Trigger class="cursor-pointer flex gap-2">
 		{#if $session.data}
 			<Avatar.Root
                 delayMs={200}
                 class="flex items-center justify-center"
             >
-                <Avatar.Image src={$session.data?.user.image} alt={$session.data?.user.name} />
-                <Avatar.Fallback>{$session.data?.user.name.charAt(0).toUpperCase()}</Avatar.Fallback>
+                <Avatar.Image src={$session.data.user.image} alt={$session.data.user.name} />
+                <Avatar.Fallback>{$session.data.user.name.charAt(0).toUpperCase()}</Avatar.Fallback>
             </Avatar.Root>
+            <p class="text-neutral-400 text-sm font-light">{$session.data.user.email}</p>
 		{:else}
 			<UserCircleIcon class="w-8 h-8 text-neutral-400" weight="light" />
 		{/if}
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Portal>
-		<DropdownMenu.Content class="mr-2 origin-top">
+		<DropdownMenu.Content class="m-2 origin-bottom-left">
 			{#if $session.data}
 				<DropdownMenu.Item>
 					<div class="flex items-center">
