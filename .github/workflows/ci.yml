@@ -1,6 +1,8 @@
 name: CI
 
 on:
+    workflow_dispatch:
+    workflow_call:
     push:
         branches: [main]
     pull_request:
@@ -8,7 +10,7 @@ on:
 
 jobs:
     ci:
-        name: Lint, typecheck & test
+        name: Lint & Typecheck
         runs-on: ubuntu-latest
 
         steps:
