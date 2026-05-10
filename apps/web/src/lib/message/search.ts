@@ -11,7 +11,7 @@ class MessageSearch {
 				index: [
 					{ field: "subject", tokenize: "forward" },
 					{ field: "sender", tokenize: "forward" },
-					{ field: "text", tokenize: "forward" },
+					// { field: "text", tokenize: "forward" },
 				],
 			},
 		});
@@ -20,6 +20,7 @@ class MessageSearch {
 	// loads from cache, builds index
 	async init() {
 		const messages = await db.messages.toArray();
+        this.clear();
 		this.bulkIndex(messages);
 	}
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { store } from "$lib/message/store";
-	import type { MessageMetadata } from "@basalt/types";
+	import { getTabState } from "$lib/state.svelte";
+	import type { Message, MessageMetadata } from "@basalt/types";
 	import { Command, Dialog } from "bits-ui";
 	import { EnvelopeIcon } from "phosphor-svelte";
 	import type { Snippet } from "svelte";
@@ -15,6 +16,7 @@
 
 	let query = $state("");
 	let results = $state<MessageMetadata[]>([]);
+    let tabState = getTabState();
 
 	$effect(() => {
 		const q = query;
@@ -26,6 +28,16 @@
 			cancelled = true;
 		};
 	});
+
+    function handleSelection(message: Message){
+        open = false;
+        tabState.new({
+            type: "message",
+            mailbox: message.mailbox,
+            uid: message.uid,
+            title: message.subject
+        })
+    }
 </script>
 
 <Dialog.Root bind:open>
@@ -36,6 +48,7 @@
 		<Dialog.Overlay class="fixed inset-0 z-50 bg-black/60" />
 		<Dialog.Content
 			class="fixed left-1/2 top-[15%] z-50 w-full max-w-125 -translate-x-1/2 outline-hidden"
+            onCloseAutoFocus={(e) => e.preventDefault()}
 		>
 			<Command.Root shouldFilter={false}>
 				<Command.Input
@@ -57,6 +70,7 @@
 									{#each results as message (`${message.mailbox}:${message.uid}`)}
 										<Command.Item
 											value={`${message.mailbox}:${message.uid}`}
+                                            onSelect={() => handleSelection(message)}
 										>
 											<EnvelopeIcon class="size-4" />
 											<div>
