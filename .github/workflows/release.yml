@@ -8,48 +8,7 @@ jobs:
         uses: ./.github/workflows/ci.yml
 
     release:
-        needs: ci # only runs if CI passes
-        runs-on: ubuntu-latest
+        needs: ci
         permissions:
             contents: write
-
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0 # git-cliff needs full history
-
-            - name: Install git-cliff
-              uses: taiki-e/install-action@v2
-              with:
-                  tool: git-cliff
-
-            - name: Bump version and generate changelog
-              id: cliff
-              run: |
-                  # Let git-cliff calculate the next version based on commits
-                  NEXT_VERSION=$(git cliff --bumped-version)
-                  echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-
-                  # Generate the release notes (just for this release, not full changelog)
-                  git cliff --bump --unreleased --strip all -o RELEASE_NOTES.md
-
-                  # Update full CHANGELOG.md
-                  git cliff --bump -o CHANGELOG.md
-
-            - name: Commit changelog
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
-                  git add CHANGELOG.md
-                  git commit -m "chore(release): prepare for ${{ steps.cliff.outputs.version }}"
-                  git tag ${{ steps.cliff.outputs.version }}
-                  git push
-                  git push --tags
-
-            - name: Create GitHub release
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  gh release create ${{ steps.cliff.outputs.version }} \
-                    --title "${{ steps.cliff.outputs.version }}" \
-                    --notes-file RELEASE_NOTES.md
+        uses: mcl-playz/actions/.github/workflows/release.yml@main
