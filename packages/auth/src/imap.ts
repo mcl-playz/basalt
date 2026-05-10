@@ -17,7 +17,10 @@ export function buildImapClient(email: string, password: string): ImapFlow {
 	});
 }
 
-export async function verifyImapCredentials(email: string, password: string): Promise<boolean> {
+export async function verifyImapCredentials(
+	email: string,
+	password: string,
+): Promise<boolean> {
 	const client = buildImapClient(email, password);
 	try {
 		await client.connect();

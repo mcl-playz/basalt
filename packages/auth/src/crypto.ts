@@ -1,4 +1,9 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import {
+	createCipheriv,
+	createDecipheriv,
+	createHash,
+	randomBytes,
+} from "node:crypto";
 
 import { env } from "@basalt/env/server";
 
@@ -18,7 +23,10 @@ function getKey(): Buffer {
 export function encryptSecret(plaintext: string): string {
 	const iv = randomBytes(IV_LENGTH);
 	const cipher = createCipheriv(ALGORITHM, getKey(), iv);
-	const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+	const ciphertext = Buffer.concat([
+		cipher.update(plaintext, "utf8"),
+		cipher.final(),
+	]);
 	const tag = cipher.getAuthTag();
 	return Buffer.concat([iv, tag, ciphertext]).toString("base64");
 }
@@ -30,5 +38,8 @@ export function decryptSecret(blob: string): string {
 	const ciphertext = buf.subarray(IV_LENGTH + TAG_LENGTH);
 	const decipher = createDecipheriv(ALGORITHM, getKey(), iv);
 	decipher.setAuthTag(tag);
-	return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf8");
+	return Buffer.concat([
+		decipher.update(ciphertext),
+		decipher.final(),
+	]).toString("utf8");
 }

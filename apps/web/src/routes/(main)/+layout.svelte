@@ -1,47 +1,59 @@
 <script lang="ts">
-    import { createQuery } from "@tanstack/svelte-query";
-    import "../../app.css";
-    import { orpc } from "$lib/orpc";
-    import { CaretDoubleLeftIcon, EnvelopeIcon, FireIcon, FolderIcon, MagnifyingGlassIcon, PaperclipIcon, PaperPlaneTiltIcon, PencilIcon, ScrollIcon, TrashIcon, TrayIcon } from "phosphor-svelte";
-    import { Button } from "bits-ui";
-	import AccountMenu from "$lib/components/AccountMenu.svelte";
-	import SearchPopup from "$lib/components/SearchPopup.svelte";
-    import Tab from "$lib/components/Tab.svelte";
-	import { search } from "$lib/message/search";
-	import { setMailboxState, setTabState } from "$lib/state.svelte";
-	import type { Mailbox } from "@basalt/types";
+import { createQuery } from "@tanstack/svelte-query";
+import "../../app.css";
+import type { Mailbox } from "@basalt/types";
+import { Button } from "bits-ui";
+import {
+	CaretDoubleLeftIcon,
+	EnvelopeIcon,
+	FireIcon,
+	FolderIcon,
+	MagnifyingGlassIcon,
+	PaperclipIcon,
+	PaperPlaneTiltIcon,
+	PencilIcon,
+	ScrollIcon,
+	TrashIcon,
+	TrayIcon,
+} from "phosphor-svelte";
+import AccountMenu from "$lib/components/AccountMenu.svelte";
+import SearchPopup from "$lib/components/SearchPopup.svelte";
+import Tab from "$lib/components/Tab.svelte";
+import { search } from "$lib/message/search";
+import { orpc } from "$lib/orpc";
+import { setMailboxState, setTabState } from "$lib/state.svelte";
 
-    const { children } = $props();
+const { children } = $props();
 
-    const mailboxesQuery = createQuery(orpc.mail.getMailboxes.queryOptions());
-    const tabState = setTabState();
-    const mailboxState = setMailboxState();
-    let mailbox = $state<Mailbox | null>();
+const mailboxesQuery = createQuery(orpc.mail.getMailboxes.queryOptions());
+const tabState = setTabState();
+const mailboxState = setMailboxState();
+let mailbox = $state<Mailbox | null>();
 
-    $effect(() => {
-        const mailboxes = $mailboxesQuery.data?.mailboxes;
-        if (!mailboxes || mailboxes.length === 0) return;
+$effect(() => {
+	const mailboxes = $mailboxesQuery.data?.mailboxes;
+	if (!mailboxes || mailboxes.length === 0) return;
 
-        if (!mailboxState.selected) {
-            mailboxState.select(mailboxes[0].path);
-            mailbox = mailboxes[0];
-        } else {
-            const match = mailboxes.find(x => x.path === mailboxState.selected);
-            if (match) mailbox = match;
-        }
+	if (!mailboxState.selected) {
+		mailboxState.select(mailboxes[0].path);
+		mailbox = mailboxes[0];
+	} else {
+		const match = mailboxes.find((x) => x.path === mailboxState.selected);
+		if (match) mailbox = match;
+	}
 
-        search.init();
-    });
+	search.init();
+});
 
-    const isFolderType = (path: string, type: string) =>
-        path.toLowerCase().includes(type.toLowerCase());
+const isFolderType = (path: string, type: string) =>
+	path.toLowerCase().includes(type.toLowerCase());
 
-    function handleMailboxSelect(path: string) {
-        const m = $mailboxesQuery.data?.mailboxes.find(x => x.path === path);
-        if (m) mailbox = m;
-        mailboxState.select(path);
-        tabState.select(null);
-    }
+function handleMailboxSelect(path: string) {
+	const m = $mailboxesQuery.data?.mailboxes.find((x) => x.path === path);
+	if (m) mailbox = m;
+	mailboxState.select(path);
+	tabState.select(null);
+}
 </script>
 
 <div class="h-screen flex">

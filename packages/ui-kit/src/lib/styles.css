@@ -2,30 +2,30 @@
 
 /* Chrome/Edge/Safari */
 *::-webkit-scrollbar {
-    width: 6px;
+	width: 6px;
 }
 *::-webkit-scrollbar-track {
-    background: transparent;
+	background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-    background: var(--color-neutral-700);
-    border-radius: 4px;
+	background: var(--color-neutral-700);
+	border-radius: 4px;
 }
 *::-webkit-scrollbar-thumb:hover {
-    background: var(--color-neutral-600);
+	background: var(--color-neutral-600);
 }
 
 /* Firefox only */
 @supports not selector(*::-webkit-scrollbar) {
-    * {
-        scrollbar-width: thin;
-        scrollbar-color: var(--color-neutral-700) transparent;
-    }
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-neutral-700) transparent;
+	}
 }
 
 @layer base {
 	[data-button-root] {
-		@apply border border-neutral-800 px-2 py-3 rounded-lg cursor-pointer not-disabled:hover:bg-neutral-900 disabled:opacity-45 disabled:cursor-not-allowed  transition-all;
+		@apply border border-neutral-800 px-2 py-3 rounded-lg cursor-pointer not-disabled:hover:bg-neutral-900 disabled:opacity-45 disabled:cursor-not-allowed transition-all;
 	}
 
 	[data-button-root][data-primary] {
@@ -57,9 +57,7 @@
 	}
 
 	[data-avatar-fallback] {
-		@apply flex h-full w-full items-center justify-center 
-		   rounded-full bg-neutral-800 text-neutral-400 
-		   text-sm font-medium uppercase;
+		@apply flex h-full w-full items-center justify-center rounded-full bg-neutral-800 text-neutral-400 text-sm font-medium uppercase;
 	}
 
 	[data-dropdown-menu-trigger] {

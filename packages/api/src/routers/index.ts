@@ -7,7 +7,7 @@ export const appRouter = {
 	healthCheck: publicProcedure.handler(() => {
 		return "OK";
 	}),
-    mail: mailRouter
+	mail: mailRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

@@ -1,8 +1,8 @@
 <script lang="ts">
+import { Button, Label } from "bits-ui";
+import { EyeClosedIcon, EyeIcon, EyeSlashIcon } from "phosphor-svelte";
 import { authClient } from "$lib/auth-client";
-	import { store } from "$lib/message/store";
-	import { Button, Label } from "bits-ui";
-	import { EyeClosedIcon, EyeIcon, EyeSlashIcon } from "phosphor-svelte";
+import { store } from "$lib/message/store";
 
 let email = $state("");
 let password = $state("");
@@ -18,16 +18,20 @@ async function handleLogin(e: Event) {
 	loading = true;
 	errorMessage = "";
 
-    await authClient.signIn.credentials({ email, password, fetchOptions: {
-        onSuccess: async () => {
-            await store.requestPersistentStorage().then();
-            window.location.assign("/");
-        },
-        onError: (e) => {
-            errorMessage = "Invalid email or password. Please try again.";
-        }
-    }});
-    loading = false;
+	await authClient.signIn.credentials({
+		email,
+		password,
+		fetchOptions: {
+			onSuccess: async () => {
+				await store.requestPersistentStorage().then();
+				window.location.assign("/");
+			},
+			onError: () => {
+				errorMessage = "Invalid email or password. Please try again.";
+			},
+		},
+	});
+	loading = false;
 }
 </script>
 

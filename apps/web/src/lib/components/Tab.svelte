@@ -1,30 +1,30 @@
 <script lang="ts">
-	import { Button } from "bits-ui";
-	import { XIcon } from "phosphor-svelte";
-	import type { Component } from "svelte";
+import { Button } from "bits-ui";
+import { XIcon } from "phosphor-svelte";
+import type { Component } from "svelte";
 
-	let {
-        icon: Icon,
-        title,
-        selected = false,
-        closeBtn = true,
-        shrink = true,
-        open,
-        close,
-    }: {
-        icon: Component;
-        title: string;
-        selected: boolean,
-        closeBtn?: boolean;
-        shrink?: boolean;
-        open?: (e: MouseEvent) => void;
-        close?: (e: MouseEvent) => void;
-    } = $props();
+let {
+	icon: Icon,
+	title,
+	selected = false,
+	closeBtn = true,
+	shrink = true,
+	open,
+	close,
+}: {
+	icon: Component;
+	title: string;
+	selected: boolean;
+	closeBtn?: boolean;
+	shrink?: boolean;
+	open?: (e: MouseEvent) => void;
+	close?: (e: MouseEvent) => void;
+} = $props();
 
-    function trigger(e: MouseEvent, func?: Function){
-        e.stopPropagation();
-        func?.(e);
-    }
+function trigger(e: MouseEvent, func?: (e: MouseEvent) => void) {
+	e.stopPropagation();
+	func?.(e);
+}
 </script>
 
 <Button.Root 

@@ -1,9 +1,9 @@
+import { getImapClient } from "@basalt/auth";
+import type { Mailbox, Message } from "@basalt/types";
+import type { FetchMessageObject } from "imapflow";
+import { simpleParser } from "mailparser";
 import z from "zod";
 import { o, protectedProcedure } from "../index";
-import { getImapClient } from "@basalt/auth";
-import { type Mailbox, type Message } from "@basalt/types";
-import { simpleParser } from "mailparser";
-import type { FetchMessageObject } from "imapflow";
 
 export const mailRouter = o.prefix("/mail").router({
 	getMailboxes: protectedProcedure
@@ -26,7 +26,7 @@ export const mailRouter = o.prefix("/mail").router({
 		.input(
 			z.object({
 				mailboxPath: z.string().default("inbox"),
-                bodies: z.coerce.boolean().default(false),
+				bodies: z.coerce.boolean().default(false),
 			}),
 		)
 		.handler(async ({ context, input }) => {
@@ -40,33 +40,36 @@ export const mailRouter = o.prefix("/mail").router({
 					return { messages: [] };
 				}
 
-                const fetched: FetchMessageObject[] = [];
-                for await (const msg of client.fetch("1:*", {
-                    envelope: true,
-                    flags: true,
-                    ...(input.bodies ? { source: true } : null)
-                })) {
-                    fetched.push(msg);
-                }
+				const fetched: FetchMessageObject[] = [];
+				for await (const msg of client.fetch("1:*", {
+					envelope: true,
+					flags: true,
+					...(input.bodies ? { source: true } : null),
+				})) {
+					fetched.push(msg);
+				}
 
-                const messages: Message[] = await Promise.all(
-                    fetched.map(async (msg) => {
-                        const raw = input.bodies ? msg.source : null;
-                        const parsed = raw ? await simpleParser(Buffer.from(raw)) : null;
+				const messages: Message[] = await Promise.all(
+					fetched.map(async (msg) => {
+						const raw = input.bodies ? msg.source : null;
+						const parsed = raw
+							? await simpleParser(Buffer.from(raw))
+							: null;
 
-
-                        return {
-                            mailbox: mailbox.path,
-                            uid: msg.uid,
-                            subject: msg.envelope?.subject ?? "(No Subject)",
-                            sender: msg.envelope?.from?.[0]?.address ?? "unknown-sender",
-                            date: msg.envelope?.date ?? new Date(),
-                            read: msg.flags?.has("\\Seen") ?? false,
-                            text: parsed?.text ?? "",
-                            html: parsed?.html || ""
-                        };
-                    })
-                );
+						return {
+							mailbox: mailbox.path,
+							uid: msg.uid,
+							subject: msg.envelope?.subject ?? "(No Subject)",
+							sender:
+								msg.envelope?.from?.[0]?.address ??
+								"unknown-sender",
+							date: msg.envelope?.date ?? new Date(),
+							read: msg.flags?.has("\\Seen") ?? false,
+							text: parsed?.text ?? "",
+							html: parsed?.html || "",
+						};
+					}),
+				);
 
 				return { messages: messages.reverse() };
 			} finally {
@@ -109,8 +112,7 @@ export const mailRouter = o.prefix("/mail").router({
 					message: {
 						mailbox: input.mailbox,
 						uid: message?.uid,
-						subject:
-							message?.envelope?.subject ?? "(No Subject)",
+						subject: message?.envelope?.subject ?? "(No Subject)",
 						sender:
 							message?.envelope?.from?.[0]?.address ??
 							"unknown-sender",

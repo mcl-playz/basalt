@@ -2,7 +2,7 @@ import { getContext, setContext } from "svelte";
 
 interface BaseTab {
 	id: number;
-    title: string;
+	title: string;
 }
 
 interface MessageTab extends BaseTab {
@@ -36,15 +36,15 @@ class TabState {
 	new(tab: TabInput) {
 		// don't open duplicates
 		const existing = this.tabs.find((t) => {
-            if (t.type !== tab.type) return false;
-            if (tab.type === "attachment" && t.type === "attachment") {
-                return t.file === tab.file;
-            }
-            if (tab.type === "message" && t.type === "message") {
-                return t.uid === tab.uid && t.mailbox === tab.mailbox;
-            }
-            return false;
-        });
+			if (t.type !== tab.type) return false;
+			if (tab.type === "attachment" && t.type === "attachment") {
+				return t.file === tab.file;
+			}
+			if (tab.type === "message" && t.type === "message") {
+				return t.uid === tab.uid && t.mailbox === tab.mailbox;
+			}
+			return false;
+		});
 		if (existing) {
 			this.select(existing.id);
 			return;
@@ -56,7 +56,7 @@ class TabState {
 	}
 
 	close(tabId: number) {
-        const idx = this.tabs.findIndex((t) => t.id === tabId);
+		const idx = this.tabs.findIndex((t) => t.id === tabId);
 		this.tabs = this.tabs.filter((t) => t.id !== tabId);
 		if (this.activeTabId === tabId) {
 			this.select(this.tabs.at(idx)?.id ?? null);
@@ -89,10 +89,10 @@ export function getTabState() {
 	return getContext<TabState>(TAB_STATE_KEY);
 }
 
-export function setMailboxState(){
-    return setContext(MAILBOX_STATE_KEY, new MailboxState());
+export function setMailboxState() {
+	return setContext(MAILBOX_STATE_KEY, new MailboxState());
 }
 
-export function getMailboxState(){
-    return getContext<MailboxState>(MAILBOX_STATE_KEY);
+export function getMailboxState() {
+	return getContext<MailboxState>(MAILBOX_STATE_KEY);
 }

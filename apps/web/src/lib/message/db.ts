@@ -1,7 +1,7 @@
-import type { MessageBody, MessageKey, MessageMetadata } from "@basalt/types";
+import type { MessageKey, MessageMetadata } from "@basalt/types";
 import { Dexie, type Table } from "dexie";
 
-export type DexieMessageKey = [MessageKey['mailbox'], MessageKey['uid']];
+export type DexieMessageKey = [MessageKey["mailbox"], MessageKey["uid"]];
 
 class MessageDatabase extends Dexie {
 	messages!: Table<MessageMetadata, DexieMessageKey>;
@@ -10,7 +10,8 @@ class MessageDatabase extends Dexie {
 		super("basalt");
 
 		this.version(1).stores({
-			messages: "[mailbox+uid], mailbox, uid, sender, subject, date, text, html",
+			messages:
+				"[mailbox+uid], mailbox, uid, sender, subject, date, text, html",
 		});
 	}
 }

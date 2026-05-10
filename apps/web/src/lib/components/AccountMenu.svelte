@@ -1,24 +1,30 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { authClient } from "$lib/auth-client";
-	import { Avatar, DropdownMenu } from "bits-ui";
-	import { GearSixIcon, SignInIcon, SignOutIcon, UserCircleIcon, UserIcon } from "phosphor-svelte";
+import { Avatar, DropdownMenu } from "bits-ui";
+import {
+	GearSixIcon,
+	SignInIcon,
+	SignOutIcon,
+	UserCircleIcon,
+	UserIcon,
+} from "phosphor-svelte";
+import { goto } from "$app/navigation";
+import { authClient } from "$lib/auth-client";
 
-    const session = authClient.useSession();
+const session = authClient.useSession();
 
-    async function handleSignIn(){
-        goto("/login")
-    }
+async function handleSignIn() {
+	goto("/login");
+}
 
-    async function handleSignOut() {
-		await authClient.signOut({
-			fetchOptions: {
-				onSuccess: () => {
-					goto("/");
-				}
-			}
-		});
-	}
+async function handleSignOut() {
+	await authClient.signOut({
+		fetchOptions: {
+			onSuccess: () => {
+				goto("/");
+			},
+		},
+	});
+}
 </script>
 
 <DropdownMenu.Root>

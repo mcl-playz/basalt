@@ -1,43 +1,43 @@
 <script lang="ts">
-	import { store } from "$lib/message/store";
-	import { getTabState } from "$lib/state.svelte";
-	import type { Message, MessageMetadata } from "@basalt/types";
-	import { Command, Dialog } from "bits-ui";
-	import { EnvelopeIcon } from "phosphor-svelte";
-	import type { Snippet } from "svelte";
+import type { Message, MessageMetadata } from "@basalt/types";
+import { Command, Dialog } from "bits-ui";
+import { EnvelopeIcon } from "phosphor-svelte";
+import type { Snippet } from "svelte";
+import { store } from "$lib/message/store";
+import { getTabState } from "$lib/state.svelte";
 
-	let {
-		open = $bindable(false),
-		children,
-	}: {
-		open?: boolean;
-		children: Snippet;
-	} = $props();
+let {
+	open = $bindable(false),
+	children,
+}: {
+	open?: boolean;
+	children: Snippet;
+} = $props();
 
-	let query = $state("");
-	let results = $state<MessageMetadata[]>([]);
-    let tabState = getTabState();
+let query = $state("");
+let results = $state<MessageMetadata[]>([]);
+let tabState = getTabState();
 
-	$effect(() => {
-		const q = query;
-		let cancelled = false;
-        store.search(q).then((r) => {
-            if(!cancelled) results = r;
-        })
-		return () => {
-			cancelled = true;
-		};
+$effect(() => {
+	const q = query;
+	let cancelled = false;
+	store.search(q).then((r) => {
+		if (!cancelled) results = r;
 	});
+	return () => {
+		cancelled = true;
+	};
+});
 
-    function handleSelection(message: Message){
-        open = false;
-        tabState.new({
-            type: "message",
-            mailbox: message.mailbox,
-            uid: message.uid,
-            title: message.subject
-        })
-    }
+function handleSelection(message: Message) {
+	open = false;
+	tabState.new({
+		type: "message",
+		mailbox: message.mailbox,
+		uid: message.uid,
+		title: message.subject,
+	});
+}
 </script>
 
 <Dialog.Root bind:open>

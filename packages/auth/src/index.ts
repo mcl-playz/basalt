@@ -35,20 +35,23 @@ export function createAuth() {
 				linkAccountIfExisting: true,
 				providerId: IMAP_PROVIDER_ID,
 				async callback(ctx, parsed) {
-					const ok = await verifyImapCredentials(parsed.email, parsed.password);
+					const ok = await verifyImapCredentials(
+						parsed.email,
+						parsed.password,
+					);
 					if (!ok) return null;
 
 					const encrypted = encryptSecret(parsed.password);
-                    let name = parsed.email.split("@")[0];
-                    if(name){
-                        name = name
-                            .replace(/[._-]/g, ' ') // Replace dots, underscores, and dashes with spaces
-                            .replace(/[0-9]$/, '') // Remove trailing numbers
-                            .trim()
-                            .replace(/\b\w/g, (char) => char.toUpperCase());;
-                    } else {
-                        name = parsed.email;
-                    }
+					let name = parsed.email.split("@")[0];
+					if (name) {
+						name = name
+							.replace(/[._-]/g, " ") // Replace dots, underscores, and dashes with spaces
+							.replace(/[0-9]$/, "") // Remove trailing numbers
+							.trim()
+							.replace(/\b\w/g, (char) => char.toUpperCase());
+					} else {
+						name = parsed.email;
+					}
 
 					return {
 						email: parsed.email,
@@ -56,9 +59,12 @@ export function createAuth() {
 						emailVerified: true,
 						async onSignIn(userData, _user, account) {
 							if (account) {
-								await ctx.context.internalAdapter.updateAccount(account.id, {
-									password: encrypted,
-								});
+								await ctx.context.internalAdapter.updateAccount(
+									account.id,
+									{
+										password: encrypted,
+									},
+								);
 							}
 							return userData;
 						},

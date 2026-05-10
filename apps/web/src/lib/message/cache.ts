@@ -1,12 +1,9 @@
-import type { Message, MessageKey, MessageMetadata } from "@basalt/types";
-import { db, type DexieMessageKey } from "./db";
+import type { Message, MessageKey } from "@basalt/types";
 import { client } from "$lib/orpc";
+import { type DexieMessageKey, db } from "./db";
 
 class MessageCache {
-	async get(
-		mailbox: string,
-		uid: number,
-	): Promise<Message | undefined> {
+	async get(mailbox: string, uid: number): Promise<Message | undefined> {
 		return db.messages.get([mailbox, uid]);
 	}
 
@@ -27,9 +24,9 @@ class MessageCache {
 		return db.messages.delete([mailbox, uid]);
 	}
 	async bulkDelete(keys: MessageKey[]) {
-	    return db.messages.bulkDelete(keys.map(
-			(key) => [key.mailbox, key.uid] as DexieMessageKey,
-		));
+		return db.messages.bulkDelete(
+			keys.map((key) => [key.mailbox, key.uid] as DexieMessageKey),
+		);
 	}
 	async clear() {
 		return db.messages.clear();
@@ -37,9 +34,12 @@ class MessageCache {
 
 	// syncs one mailbox against IMAP, returns { added, removed }
 	async sync(
-		mailbox: string
+		mailbox: string,
 	): Promise<{ added: Message[]; removed: MessageKey[] }> {
-		const { messages } = await client.mail.getMessages({ mailboxPath: mailbox, bodies: true });
+		const { messages } = await client.mail.getMessages({
+			mailboxPath: mailbox,
+			bodies: true,
+		});
 
 		const serverUids = new Set(messages.map((m) => m.uid));
 
@@ -49,12 +49,12 @@ class MessageCache {
 			.primaryKeys()) as DexieMessageKey[];
 
 		const removedKeys = cachedKeys
-            .filter(([, uid]) => !serverUids.has(uid))
-            .map(([mailbox, uid]) => ({ mailbox, uid }));
+			.filter(([, uid]) => !serverUids.has(uid))
+			.map(([mailbox, uid]) => ({ mailbox, uid }));
 
 		if (removedKeys.length > 0) await this.bulkDelete(removedKeys);
 
-	    await db.messages.bulkPut(messages);
+		await db.messages.bulkPut(messages);
 
 		const cachedUids = new Set(cachedKeys.map(([, uid]) => uid));
 		const added = messages.filter((m) => !cachedUids.has(m.uid));

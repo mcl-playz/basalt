@@ -1,6 +1,6 @@
-import type { MessageMetadata, MessageKey, Message } from "@basalt/types";
+import type { Message, MessageKey } from "@basalt/types";
 import { Document } from "flexsearch";
-import { db, type DexieMessageKey } from "./db";
+import { type DexieMessageKey, db } from "./db";
 
 class MessageSearch {
 	readonly idx;
@@ -20,7 +20,7 @@ class MessageSearch {
 	// loads from cache, builds index
 	async init() {
 		const messages = await db.messages.toArray();
-        this.clear();
+		this.clear();
 		this.bulkIndex(messages);
 	}
 
@@ -29,12 +29,12 @@ class MessageSearch {
 		this.idx.add({
 			...message,
 			_id: `${message.mailbox}\0${message.uid}`,
-		} as any);
+		} as Message & { _id: string });
 	}
 
 	// adds multiple messages to the index
 	bulkIndex(messages: Message[]) {
-		messages.forEach((m) => this.index(m));
+		for (const m of messages) this.index(m);
 	}
 
 	// removes a message from the index
@@ -44,7 +44,7 @@ class MessageSearch {
 
 	// removes multiple messages from the index
 	bulkUnindex(keys: MessageKey[]) {
-		keys.forEach(({mailbox, uid}) => this.unindex(mailbox, uid));
+		for (const { mailbox, uid } of keys) this.unindex(mailbox, uid);
 	}
 
 	// searches the index for messages
@@ -54,7 +54,9 @@ class MessageSearch {
 
 		const results = this.idx.search(q, { limit });
 		const ids = new Set<string>();
-		results.forEach((r) => r.result.forEach((id) => ids.add(id as string)));
+		for (const r of results) {
+			for (const id of r.result) ids.add(id as string);
+		}
 
 		const keys = [...ids].map((id) => {
 			const [mailbox, uid] = id.split("\0");

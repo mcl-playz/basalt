@@ -1,7 +1,7 @@
 {
-  "name": "@basalt/types",
-  "type": "module",
-  "exports": {
+	"name": "@basalt/types",
+	"type": "module",
+	"exports": {
 		".": {
 			"default": "./src/index.ts"
 		},
@@ -9,10 +9,10 @@
 			"default": "./src/*.ts"
 		}
 	},
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
 }

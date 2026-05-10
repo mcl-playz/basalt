@@ -1,54 +1,60 @@
 <script lang="ts">
-	import { Checkbox, Button } from "bits-ui";
-	import { CheckIcon, EnvelopeIcon, EnvelopeOpenIcon } from "phosphor-svelte";
-    import { type MessageMetadata } from "@basalt/types";
-	import type { MouseEventHandler } from "svelte/elements";
-	
-    let { message, onclick }: { message: MessageMetadata, onclick: MouseEventHandler<HTMLButtonElement> } = $props();
+import { type MessageMetadata } from "@basalt/types";
+import { Button, Checkbox } from "bits-ui";
+import { CheckIcon, EnvelopeIcon, EnvelopeOpenIcon } from "phosphor-svelte";
+import type { MouseEventHandler } from "svelte/elements";
 
-	const dateObj = $derived(message.date instanceof Date ? message.date : new Date(message.date));
+let {
+	message,
+	onclick,
+}: { message: MessageMetadata; onclick: MouseEventHandler<HTMLButtonElement> } =
+	$props();
 
-    const isToday = (date: Date) => {
-        const today = new Date();
-        return (
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear()
-        );
-    };
+const dateObj = $derived(
+	message.date instanceof Date ? message.date : new Date(message.date),
+);
 
-    const isThisYear = (date: Date) => {
-        return date.getFullYear() === new Date().getFullYear();
-    }
+const isToday = (date: Date) => {
+	const today = new Date();
+	return (
+		date.getDate() === today.getDate() &&
+		date.getMonth() === today.getMonth() &&
+		date.getFullYear() === today.getFullYear()
+	);
+};
 
-    const formatTime = new Intl.DateTimeFormat(undefined, {
-        hour: "numeric",
-        minute: "2-digit",
-    });
+const isThisYear = (date: Date) => {
+	return date.getFullYear() === new Date().getFullYear();
+};
 
-    const formatDate = new Intl.DateTimeFormat(undefined, {
-        month: "short",
-        day: "numeric",
-    });
+const formatTime = new Intl.DateTimeFormat(undefined, {
+	hour: "numeric",
+	minute: "2-digit",
+});
 
-    const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-    });
+const formatDate = new Intl.DateTimeFormat(undefined, {
+	month: "short",
+	day: "numeric",
+});
 
-	const deleteMessage = (e: MouseEvent) => {
-		e.stopPropagation();
-		console.log("Deleting", message.uid);
-	};
+const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
+	year: "numeric",
+	month: "short",
+	day: "numeric",
+});
 
-	const toggleRead = (e: MouseEvent) => {
-		e.stopPropagation();
-		console.log("Toggling read status for", message.uid);
-	};
+const deleteMessage = (e: MouseEvent) => {
+	e.stopPropagation();
+	console.log("Deleting", message.uid);
+};
 
-	let initial = $derived(message.sender.charAt(0).toUpperCase());
-	let isUnread = $derived(!message.read);
+const toggleRead = (e: MouseEvent) => {
+	e.stopPropagation();
+	console.log("Toggling read status for", message.uid);
+};
+
+let initial = $derived(message.sender.charAt(0).toUpperCase());
+let isUnread = $derived(!message.read);
 </script>
 
 <button class="text-left w-full h-11 group flex items-center gap-4 px-3 py-2 transition-colors cursor-pointer 

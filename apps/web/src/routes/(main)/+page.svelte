@@ -1,118 +1,118 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { authClient } from "$lib/auth-client";
-	import MessageCard from "$lib/components/MessageCard.svelte";
-	import { store } from "$lib/message/store";
-	import { getMailboxState, getTabState } from "$lib/state.svelte";
-	import type { Message as MessageType } from "@basalt/types";
-	import Message from "$lib/components/Message.svelte";
+import type { Message as MessageType } from "@basalt/types";
+import { goto } from "$app/navigation";
+import { authClient } from "$lib/auth-client";
+import Message from "$lib/components/Message.svelte";
+import MessageCard from "$lib/components/MessageCard.svelte";
+import { store } from "$lib/message/store";
+import { getMailboxState, getTabState } from "$lib/state.svelte";
 
-	const sessionQuery = authClient.useSession();
-	const tabState = getTabState();
-	const mailboxState = getMailboxState();
+const sessionQuery = authClient.useSession();
+const tabState = getTabState();
+const mailboxState = getMailboxState();
 
-	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.data) {
-			goto("/login");
-		}
+$effect(() => {
+	if (!$sessionQuery.isPending && !$sessionQuery.data) {
+		goto("/login");
+	}
+});
+
+// ---- mailbox list ----
+let messages = $state<MessageType[]>([]);
+let listLoading = $state(true);
+
+$effect(() => {
+	const path = mailboxState.selected;
+	if (!path) return;
+
+	listLoading = true;
+	messages = [];
+	let cancelled = false;
+
+	store.getMessages(path).then((cached) => {
+		if (cancelled) return;
+		messages = cached;
+		if (cached.length > 0) listLoading = false;
 	});
 
-	// ---- mailbox list ----
-	let messages = $state<MessageType[]>([]);
-	let listLoading = $state(true);
-
-	$effect(() => {
-		const path = mailboxState.selected;
-		if (!path) return;
-
-		listLoading = true;
-		messages = [];
-		let cancelled = false; 
-
-		store.getMessages(path).then((cached) => {
+	store
+		.syncMailbox(path)
+		.then(async () => {
 			if (cancelled) return;
-			messages = cached;
-			if (cached.length > 0) listLoading = false;
+			messages = await store.getMessages(path);
+		})
+		.catch((err) => {
+			if (cancelled) return;
+			console.error("Failed to refresh mailbox", path, err);
+		})
+		.finally(() => {
+			listLoading = false;
 		});
 
-		store
-			.syncMailbox(path)
-			.then(async () => {
-				if (cancelled) return;
-				messages = await store.getMessages(path);
-			})
-			.catch((err) => {
-				if (cancelled) return;
-				console.error("Failed to refresh mailbox", path, err);
-			})
-			.finally(() => {
-				listLoading = false;
-			});
+	return () => {
+		cancelled = true;
+	};
+});
 
-		return () => {
-			cancelled = true;
-		};
+function handleMessageSelect(msg: MessageType) {
+	tabState.new({
+		type: "message",
+		mailbox: msg.mailbox,
+		uid: msg.uid,
+		title: msg.subject,
 	});
+}
 
-	function handleMessageSelect(msg: MessageType) {
-		tabState.new({
-			type: "message",
-			mailbox: msg.mailbox,
-			uid: msg.uid,
-			title: msg.subject,
-		});
+// ---- active message tab ----
+let activeMessage = $state<MessageType>();
+let messageLoading = $state(false);
+let messageError = $state<string | null>(null);
+
+$effect(() => {
+	const tab = tabState.activeTab;
+	if (!tab || tab.type !== "message") {
+		activeMessage = undefined;
+		messageLoading = false;
+		messageError = null;
+		return;
 	}
 
-	// ---- active message tab ----
-	let activeMessage = $state<MessageType>();
-	let messageLoading = $state(false);
-	let messageError = $state<string | null>(null);
-
-	$effect(() => {
-		const tab = tabState.activeTab;
-		if (!tab || tab.type !== "message") {
-			activeMessage = undefined;
-			messageLoading = false;
-			messageError = null;
-			return;
-		}
-
-		const memoed = store.peekMessage(tab.mailbox, tab.uid);
-		if (memoed) {
-			activeMessage = memoed;
-			messageLoading = false;
-			messageError = null;
-			return;
-		}
-
-		let cancelled = false;
-		messageLoading = true;
+	const memoed = store.peekMessage(tab.mailbox, tab.uid);
+	if (memoed) {
+		activeMessage = memoed;
+		messageLoading = false;
 		messageError = null;
-		activeMessage = undefined;
+		return;
+	}
 
-		store
-			.getMessage(tab.mailbox, tab.uid)
-			.then((result) => {
-				if (cancelled) return;
-				if (!result) {
-					messageError = "Message not found";
-					return;
-				}
-				activeMessage = result;
-			})
-			.catch((err) => {
-				if (cancelled) return;
-				console.error("Failed to load message", err);
-				messageError = "Failed to load message";
-			})
-			.finally(() => {
-				if (!cancelled) messageLoading = false;
-			});
+	let cancelled = false;
+	messageLoading = true;
+	messageError = null;
+	activeMessage = undefined;
 
-		return () => {
-			cancelled = true;
-		};
-	});
+	store
+		.getMessage(tab.mailbox, tab.uid)
+		.then((result) => {
+			if (cancelled) return;
+			if (!result) {
+				messageError = "Message not found";
+				return;
+			}
+			activeMessage = result;
+		})
+		.catch((err) => {
+			if (cancelled) return;
+			console.error("Failed to load message", err);
+			messageError = "Failed to load message";
+		})
+		.finally(() => {
+			if (!cancelled) messageLoading = false;
+		});
+
+	return () => {
+		cancelled = true;
+	};
+});
 </script>
 
 {#if tabState.activeTab?.type === "message"}
