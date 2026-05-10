@@ -32,12 +32,12 @@ export async function verifyImapCredentials(email: string, password: string): Pr
 	}
 }
 
-/**
- * Open an authenticated IMAP connection for a given user, using the password
- * stored encrypted on the user's IMAP account row. The caller is responsible
- * for calling `client.logout()` (or `client.close()`) when done.
- */
-export async function getImapClient(userId: string): Promise<ImapFlow> {
+// Per-user pool of long-lived IMAP connections. ImapFlow serialises mailbox
+// operations via getMailboxLock(), so multiple concurrent handlers can safely
+// share the same client without opening a new TLS+LOGIN session each time.
+const clientPool = new Map<string, Promise<ImapFlow>>();
+
+async function createImapClient(userId: string): Promise<ImapFlow> {
 	const { auth } = await import("./index");
 	const ctx = await auth.$context;
 
@@ -54,4 +54,40 @@ export async function getImapClient(userId: string): Promise<ImapFlow> {
 	const client = buildImapClient(user.email, password);
 	await client.connect();
 	return client;
+}
+
+/**
+ * Return a connected, pooled IMAP client for the given user. The connection is
+ * kept alive across requests; callers MUST NOT call `client.logout()` or
+ * `client.close()` — just release any mailbox lock they took.
+ */
+export async function getImapClient(userId: string): Promise<ImapFlow> {
+	const existing = clientPool.get(userId);
+	if (existing) {
+		try {
+			const client = await existing;
+			if (client.usable) return client;
+		} catch {
+			// fall through to recreate
+		}
+		clientPool.delete(userId);
+	}
+
+	const promise = createImapClient(userId);
+	clientPool.set(userId, promise);
+
+	try {
+		const client = await promise;
+		const evict = () => {
+			if (clientPool.get(userId) === promise) {
+				clientPool.delete(userId);
+			}
+		};
+		client.once("close", evict);
+		client.once("error", evict);
+		return client;
+	} catch (err) {
+		clientPool.delete(userId);
+		throw err;
+	}
 }
