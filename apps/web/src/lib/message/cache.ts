@@ -35,11 +35,11 @@ class MessageCache {
 		return db.messages.clear();
 	}
 
-	// syncs one mailbox against IMAP, returns {added, removed}
+	// syncs one mailbox against IMAP, returns { added, removed }
 	async sync(
-		mailbox: string,
+		mailbox: string
 	): Promise<{ added: Message[]; removed: MessageKey[] }> {
-		const { messages } = await client.mail.getMessages({ mailboxPath: mailbox });
+		const { messages } = await client.mail.getMessages({ mailboxPath: mailbox, bodies: true });
 
 		const serverUids = new Set(messages.map((m) => m.uid));
 

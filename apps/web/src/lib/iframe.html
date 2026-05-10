@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+	<head>
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			html,
+			body {
+				background: transparent !important;
+                color: white;
+				font-family: sans-serif;
+				font-size: 14px;
+				line-height: 1.6;
+
+				/* IMPORTANT */
+				width: max-content;
+				min-width: 0;
+				overflow: hidden;
+			}
+
+            body {
+                display: inline-block;
+            }
+
+			a {
+				color: #60a5fa;
+			}
+
+			/* don't force all tables full width */
+			table {
+				max-width: 100%;
+			}
+
+			td {
+				word-break: break-word;
+			}
+		</style>
+	</head>
+
+	<script>
+		const sendSize = () => {
+			requestAnimationFrame(() => {
+				const body = document.body;
+				const html = document.documentElement;
+
+				const width = Math.ceil(
+					Math.max(
+						body.scrollWidth,
+						body.offsetWidth,
+						html.scrollWidth,
+						html.offsetWidth,
+					),
+				);
+
+				const height = Math.ceil(
+					Math.max(
+						body.scrollHeight,
+						body.offsetHeight,
+						html.scrollHeight,
+						html.offsetHeight,
+					),
+				);
+
+				parent.postMessage(
+					{
+						width,
+						height,
+					},
+					"*",
+				);
+			});
+		};
+
+		const observer = new ResizeObserver(sendSize);
+
+		const mutationObserver = new MutationObserver(sendSize);
+
+		window.addEventListener("load", async () => {
+			observer.observe(document.body);
+
+			mutationObserver.observe(document.body, {
+				childList: true,
+				subtree: true,
+				attributes: true,
+			});
+
+			// wait for images
+			await Promise.all(
+				[...document.images].map((img) =>
+					img.complete
+						? Promise.resolve()
+						: new Promise((resolve) => {
+								img.onload = resolve;
+								img.onerror = resolve;
+							}),
+				),
+			);
+
+			// wait for fonts
+			if (document.fonts?.ready) {
+				await document.fonts.ready;
+			}
+
+			sendSize();
+
+			// emails love late reflows
+			setTimeout(sendSize, 50);
+			setTimeout(sendSize, 250);
+			setTimeout(sendSize, 1000);
+		});
+	</script>
+
+	<body>
+		{{content}}
+	</body>
+</html>
