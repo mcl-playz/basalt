@@ -1,0 +1,157 @@
+<script lang="ts">
+	import { goto } from "$app/navigation";
+	import { authClient } from "$lib/auth-client";
+	import MessageCard from "$lib/components/MessageCard.svelte";
+	import { store } from "$lib/message/store";
+	import { getMailboxState, getTabState } from "$lib/state.svelte";
+	import type { Message as MessageType } from "@basalt/types";
+	import Message from "$lib/components/Message.svelte";
+
+	const sessionQuery = authClient.useSession();
+	const tabState = getTabState();
+	const mailboxState = getMailboxState();
+
+	$effect(() => {
+		if (!$sessionQuery.isPending && !$sessionQuery.data) {
+			goto("/login");
+		}
+	});
+
+	// ---- mailbox list ----
+	let messages = $state<MessageType[]>([]);
+	let listLoading = $state(true);
+
+	$effect(() => {
+		const path = mailboxState.selected;
+		if (!path) return;
+
+		listLoading = true;
+		messages = [];
+		let cancelled = false; 
+
+		store.getMessages(path).then((cached) => {
+			if (cancelled) return;
+			messages = cached;
+			if (cached.length > 0) listLoading = false;
+		});
+
+		store
+			.syncMailbox(path)
+			.then(async () => {
+				if (cancelled) return;
+				messages = await store.getMessages(path);
+			})
+			.catch((err) => {
+				if (cancelled) return;
+				console.error("Failed to refresh mailbox", path, err);
+			})
+			.finally(() => {
+				listLoading = false;
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	function handleMessageSelect(msg: MessageType) {
+		tabState.new({
+			type: "message",
+			mailbox: msg.mailbox,
+			uid: msg.uid,
+			title: msg.subject,
+		});
+	}
+
+	// ---- active message tab ----
+	let activeMessage = $state<MessageType>();
+	let messageLoading = $state(false);
+	let messageError = $state<string | null>(null);
+
+	$effect(() => {
+		const tab = tabState.activeTab;
+		if (!tab || tab.type !== "message") {
+			activeMessage = undefined;
+			messageLoading = false;
+			messageError = null;
+			return;
+		}
+
+		const memoed = store.peekMessage(tab.mailbox, tab.uid);
+		if (memoed) {
+			activeMessage = memoed;
+			messageLoading = false;
+			messageError = null;
+			return;
+		}
+
+		let cancelled = false;
+		messageLoading = true;
+		messageError = null;
+		activeMessage = undefined;
+
+		store
+			.getMessage(tab.mailbox, tab.uid)
+			.then((result) => {
+				if (cancelled) return;
+				if (!result) {
+					messageError = "Message not found";
+					return;
+				}
+				activeMessage = result;
+			})
+			.catch((err) => {
+				if (cancelled) return;
+				console.error("Failed to load message", err);
+				messageError = "Failed to load message";
+			})
+			.finally(() => {
+				if (!cancelled) messageLoading = false;
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+</script>
+
+{#if tabState.activeTab?.type === "message"}
+	{#if messageLoading}
+		<div
+			class="flex flex-col items-center justify-center h-32 text-neutral-500"
+		>
+			<i>Loading...</i>
+		</div>
+	{:else if messageError}
+		<div
+			class="flex flex-col items-center justify-center h-32 text-neutral-500"
+		>
+			<i>{messageError}</i>
+		</div>
+	{:else if activeMessage}
+        <Message message={activeMessage} />
+	{/if}
+{:else if tabState.activeTab?.type === "attachment"}
+	<div>attachment</div>
+{:else if messages.length > 0}
+	<div>
+		{#each messages as message (message.uid)}
+			<MessageCard
+				{message}
+				onclick={() => handleMessageSelect(message)}
+			/>
+		{/each}
+	</div>
+{:else if listLoading}
+	<div
+		class="flex flex-col items-center justify-center h-32 text-neutral-500"
+	>
+		<i>Loading...</i>
+	</div>
+{:else}
+	<div
+		class="flex flex-col items-center justify-center h-32 text-neutral-500"
+	>
+		<i>{mailboxState.selected} is empty.</i>
+	</div>
+{/if}
