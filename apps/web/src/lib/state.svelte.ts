@@ -17,7 +17,7 @@ interface AttachmentTab extends BaseTab {
 }
 
 type Tab = MessageTab | AttachmentTab;
-type TabInput = Omit<MessageTab, "id">;
+type TabInput = Omit<MessageTab, "id"> | Omit<AttachmentTab, "id">;
 
 class MailboxState {
 	selected = $state<string>();
@@ -35,12 +35,16 @@ class TabState {
 
 	new(tab: TabInput) {
 		// don't open duplicates
-		const existing = this.tabs.find(
-			(t) =>
-				t.type === tab.type &&
-				t.uid === (tab as any).uid &&
-				t.mailbox === (tab as any).mailbox,
-		);
+		const existing = this.tabs.find((t) => {
+            if (t.type !== tab.type) return false;
+            if (tab.type === "attachment" && t.type === "attachment") {
+                return t.file === tab.file;
+            }
+            if (tab.type === "message" && t.type === "message") {
+                return t.uid === tab.uid && t.mailbox === tab.mailbox;
+            }
+            return false;
+        });
 		if (existing) {
 			this.select(existing.id);
 			return;
@@ -52,14 +56,18 @@ class TabState {
 	}
 
 	close(tabId: number) {
+        const idx = this.tabs.findIndex((t) => t.id === tabId);
 		this.tabs = this.tabs.filter((t) => t.id !== tabId);
 		if (this.activeTabId === tabId) {
-			this.select(this.tabs.at(-1)?.id ?? null);
+			this.select(this.tabs.at(idx)?.id ?? null);
 		}
 	}
 
 	select(tabId: number | null) {
-        if(tabId === null) this.activeTabId = tabId;
+		if (tabId === null) {
+			this.activeTabId = null;
+			return;
+		}
 		if (!this.tabs.find((t) => t.id === tabId))
 			throw new Error(`Tab ${tabId} not found`);
 		this.activeTabId = tabId;
