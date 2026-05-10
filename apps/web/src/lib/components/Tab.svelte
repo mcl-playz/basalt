@@ -8,6 +8,7 @@
         title,
         selected = false,
         closeBtn = true,
+        shrink = true,
         open,
         close,
     }: {
@@ -15,26 +16,27 @@
         title: string;
         selected: boolean,
         closeBtn?: boolean;
+        shrink?: boolean;
         open?: (e: MouseEvent) => void;
         close?: (e: MouseEvent) => void;
     } = $props();
 
     function trigger(e: MouseEvent, func?: Function){
         e.stopPropagation();
-        func?.(e)
+        func?.(e);
     }
 </script>
 
 <Button.Root 
-    class="group flex items-center justify-between py-1 px-1.5 text-sm w-48 h-7 bg-neutral-900 border-none overflow-hidden
-    {selected ? 'bg-neutral-800/75!' : 'hover:bg-neutral-800/40'}"
+    class="group flex items-center justify-between py-1 px-1.5 text-sm h-7 border-none overflow-hidden relative before:absolute before:inset-0 before:bg-neutral-900 before:-z-10
+    {selected ? "w-48 shrink-0 bg-neutral-800/75" : "hover:bg-neutral-800/40"} {!shrink ? 'w-48 shrink-0' : 'basis-48 min-w-8 shrink'}"
     onclick={(e: MouseEvent) => trigger(e, open)}
 >
-    <span class="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
+    <span class="flex items-center gap-1 min-w-0 flex-1 overflow-hidden mask-r-from-[calc(100%-1.25rem)] mask-r-to-100%">
         <Icon class="shrink-0" />
-        <span class="truncate">{title}</span>
+        <span class="whitespace-nowrap">{title}</span>
     </span>
     <button class="{closeBtn ? "block shrink-0" : "hidden"} p-1 cursor-pointer" onclick={(e: MouseEvent) => trigger(e, close)}>
-        <XIcon class="size-3 text-neutral-500 hover:text-white hidden group-hover:block" weight="bold" />
+        <XIcon class="size-3 text-neutral-500 hover:text-white hidden group-hover:block transition-colors" weight="bold" />
     </button>
 </Button.Root>
