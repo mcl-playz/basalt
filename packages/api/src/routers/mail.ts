@@ -4,6 +4,7 @@ import type { FetchMessageObject } from "imapflow";
 import { simpleParser } from "mailparser";
 import z from "zod";
 import { o, protectedProcedure } from "../index";
+import { ORPCError } from "@orpc/client";
 
 export const mailRouter = o.prefix("/mail").router({
 	getMailboxes: protectedProcedure
@@ -72,6 +73,18 @@ export const mailRouter = o.prefix("/mail").router({
 				);
 
 				return { messages: messages.reverse() };
+            } catch (error) {
+                if (!(error instanceof Error)) {
+                    console.error(error);
+                    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                        message: "Unknown error",
+                    });
+                }
+
+                throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                    message: error.message,
+                    cause: error,
+                });
 			} finally {
 				lock.release();
 			}
@@ -122,6 +135,18 @@ export const mailRouter = o.prefix("/mail").router({
 						html: parsed.html || "",
 					},
 				};
+            } catch (error) {
+                if (!(error instanceof Error)) {
+                    console.error(error);
+                    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                        message: "Unknown error",
+                    });
+                }
+
+                throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                    message: error.message,
+                    cause: error,
+                });
 			} finally {
 				lock.release();
 			}
