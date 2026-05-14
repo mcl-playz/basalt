@@ -34,6 +34,7 @@
 		"db:watch": "turbo -F @basalt/db db:watch",
 		"db:stop": "turbo -F @basalt/db db:stop",
 		"db:down": "turbo -F @basalt/db db:down",
+		"db:clear": "turbo -F @basalt/db db:clear",
 		"check": "biome check --write ."
 	},
 	"dependencies": {
