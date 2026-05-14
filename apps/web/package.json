@@ -21,6 +21,7 @@
 		"@orpc/tanstack-query": "^1.13.14",
 		"@tanstack/svelte-form": "^1.28.0",
 		"@tanstack/svelte-query": "^5.85.3",
+        "svelte-sonner": "^1.1.1",
 		"better-auth": "catalog:",
 		"better-auth-credentials-plugin": "^0.5.2",
 		"bits-ui": "^2.18.0",

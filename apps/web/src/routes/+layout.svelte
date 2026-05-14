@@ -1,6 +1,7 @@
 <script lang="ts">
 import { QueryClientProvider } from "@tanstack/svelte-query";
 import { SvelteQueryDevtools } from "@tanstack/svelte-query-devtools";
+import { Toaster } from "svelte-sonner";
 import { queryClient } from "$lib/orpc";
 import "../app.css";
 
@@ -13,6 +14,6 @@ const { children } = $props();
 			{@render children()}
 		</main>
 	</div>
-	<!-- <Toaster richColors position="top-right" theme="system" /> -->
+	<Toaster richColors position="top-center" theme="system" offset="8px" />
 	<SvelteQueryDevtools />
 </QueryClientProvider>

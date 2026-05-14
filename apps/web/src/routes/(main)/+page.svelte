@@ -6,6 +6,7 @@ import Message from "$lib/components/Message.svelte";
 import MessageCard from "$lib/components/MessageCard.svelte";
 import { store } from "$lib/message/store";
 import { getMailboxState, getTabState } from "$lib/state.svelte";
+	import { toast } from "svelte-sonner";
 
 const sessionQuery = authClient.useSession();
 const tabState = getTabState();
@@ -139,6 +140,10 @@ $effect(() => {
 			<MessageCard
 				{message}
 				onclick={() => handleMessageSelect(message)}
+                ondelete={(m) => {
+                    messages = messages.filter(x => x.uid !== m.uid)
+                    toast.success("Successfully deleted message")
+                }}
 			/>
 		{/each}
 	</div>
