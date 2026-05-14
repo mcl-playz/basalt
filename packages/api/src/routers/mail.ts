@@ -11,13 +11,30 @@ export const mailRouter = o.prefix("/mail").router({
 		.route({ method: "GET", path: "/mailboxes" })
 		.handler(async ({ context }) => {
 			const client = await getImapClient(context.session.user.id);
-			const mailboxes = await client.list();
+			const mailboxes = (await client.list()).map<Mailbox>((m) => {
+                let name = m.name;
+                switch (name.toLowerCase()) {
+                    case "inbox":
+                        name = "Inbox";
+                        break;
+
+                    case "junk":
+                        name = "Spam";
+                        break;
+                }
+
+                return {
+                    ...m,
+                    name,
+                };
+            });
+
+            mailboxes
+
 			return {
 				mailboxes: mailboxes.map<Mailbox>((m) => ({
 					path: m.path,
-					name: m.name.toLocaleLowerCase().includes("inbox")
-						? "Inbox"
-						: m.name,
+					name: m.name,
 					delimiter: m.delimiter,
 				})),
 			};

@@ -89,15 +89,15 @@ function handleMailboxSelect(path: string) {
                     data-minimal
                 >
                     <div class="flex items-center gap-3">
-                        {#if isFolderType(mailbox.path, "inbox")}
+                        {#if isFolderType(mailbox.name.toLowerCase(), "inbox")}
                             <TrayIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.path, "sent")}
+                        {:else if isFolderType(mailbox.name.toLowerCase(), "sent")}
                             <PaperPlaneTiltIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.path, "drafts")}
+                        {:else if isFolderType(mailbox.name.toLowerCase(), "drafts")}
                             <ScrollIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.path, "spam")}
+                        {:else if isFolderType(mailbox.name.toLowerCase(), "spam")}
                             <FireIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.path, "trash")}
+                        {:else if isFolderType(mailbox.name.toLowerCase(), "trash")}
                             <TrashIcon size="1.15rem" />
                         {:else}
                             <FolderIcon size="1.15rem" />
