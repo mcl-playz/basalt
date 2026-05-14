@@ -17,4 +17,6 @@ const requireAuth = o.middleware(async ({ context, next }) => {
 	});
 });
 
-export const protectedProcedure = publicProcedure.use(requireAuth);
+export const protectedProcedure = publicProcedure
+	.errors({ UNAUTHORIZED: {} })
+	.use(requireAuth);
