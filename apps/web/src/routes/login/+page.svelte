@@ -3,6 +3,8 @@ import { Button, Label } from "bits-ui";
 import { EyeClosedIcon, EyeIcon, EyeSlashIcon } from "phosphor-svelte";
 import { authClient } from "$lib/auth-client";
 import { store } from "$lib/message/store";
+	import { cache } from "$lib/message/cache";
+	import { search } from "$lib/message/search";
 
 let email = $state("");
 let password = $state("");
@@ -23,6 +25,8 @@ async function handleLogin(e: Event) {
 		password,
 		fetchOptions: {
 			onSuccess: async () => {
+                cache.clear();
+                search.clear();
 				await store.requestPersistentStorage().then();
 				window.location.assign("/");
 			},
