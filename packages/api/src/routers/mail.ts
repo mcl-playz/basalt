@@ -6,6 +6,24 @@ import z from "zod";
 import { o, protectedProcedure } from "../index";
 import { ORPCError } from "@orpc/client";
 
+function collapseUidRange(uids: number[]): string {
+	const sorted = [...new Set(uids)].sort((a, b) => a - b);
+	const parts: string[] = [];
+	let start = sorted[0];
+	let end = sorted[0];
+	for (let i = 1; i < sorted.length; i++) {
+		if (sorted[i] === end + 1) {
+			end = sorted[i];
+		} else {
+			parts.push(start === end ? `${start}` : `${start}:${end}`);
+			start = sorted[i];
+			end = sorted[i];
+		}
+	}
+	parts.push(start === end ? `${start}` : `${start}:${end}`);
+	return parts.join(",");
+}
+
 export const mailRouter = o.prefix("/mail").router({
 	getMailboxes: protectedProcedure
 		.route({ method: "GET", path: "/mailboxes" })
@@ -45,6 +63,7 @@ export const mailRouter = o.prefix("/mail").router({
 			z.object({
 				mailboxPath: z.string().default("inbox"),
 				bodies: z.coerce.boolean().default(false),
+				uids: z.array(z.coerce.number().int().positive()).optional(),
 			}),
 		)
 		.handler(async ({ context, input }) => {
@@ -58,12 +77,24 @@ export const mailRouter = o.prefix("/mail").router({
 					return { messages: [] };
 				}
 
+				if (input.uids && input.uids.length === 0) {
+					return { messages: [] };
+				}
+
+				const range = input.uids
+					? collapseUidRange(input.uids)
+					: "1:*";
+
 				const fetched: FetchMessageObject[] = [];
-				for await (const msg of client.fetch("1:*", {
-					envelope: true,
-					flags: true,
-					...(input.bodies ? { source: true } : null),
-				})) {
+				for await (const msg of client.fetch(
+					range,
+					{
+						envelope: true,
+						flags: true,
+						...(input.bodies ? { source: true } : null),
+					},
+					input.uids ? { uid: true } : undefined,
+				)) {
 					fetched.push(msg);
 				}
 
