@@ -2,32 +2,59 @@ import type { Message } from "@basalt/types";
 import { cache } from "./cache";
 import { search } from "./search";
 
+const SYNC_TTL_MS = 30_000;
+const MEMO_LIMIT = 200;
+
 class MessageStore {
-	// in-memory memo so re-opening a tab is instant (no IndexedDB round-trip).
 	private memo = new Map<string, Message>();
+	private lastSync = new Map<string, number>();
+	private inflight = new Map<string, Promise<Message[]>>();
 
 	private memoKey(mailbox: string, uid: number) {
 		return `${mailbox}:${uid}`;
 	}
 
-	// syncs a mailbox, updates both cache and search index
-	async syncMailbox(path: string): Promise<Message[]> {
-		const { added, removed } = await cache.sync(path);
-
-		search.bulkUnindex(removed);
-		search.bulkIndex(added);
-
-		// invalidate memo entries removed from cache
-		for (const key of removed)
-			this.memo.delete(this.memoKey(key.mailbox, key.uid));
-		// pre-warm memo with newly added messages
-		for (const msg of added)
-			this.memo.set(this.memoKey(msg.mailbox, msg.uid), msg);
-
-		return cache.getByMailbox(path);
+	private rememberMessage(message: Message) {
+		const key = this.memoKey(message.mailbox, message.uid);
+		if (this.memo.has(key)) this.memo.delete(key);
+		this.memo.set(key, message);
+		if (this.memo.size > MEMO_LIMIT) {
+			const oldest = this.memo.keys().next().value;
+			if (oldest !== undefined) this.memo.delete(oldest);
+		}
 	}
 
-	// synchronous peek into the in-memory memo; returns undefined on miss
+	async syncMailbox(path: string, force = false): Promise<Message[]> {
+		const inflight = this.inflight.get(path);
+		if (inflight) return inflight;
+
+		const last = this.lastSync.get(path) ?? 0;
+		if (!force && Date.now() - last < SYNC_TTL_MS) {
+			return cache.getByMailbox(path);
+		}
+
+		const promise = (async () => {
+			const { added, removed } = await cache.sync(path);
+
+			search.bulkUnindex(removed);
+			search.bulkIndex(added);
+
+			for (const key of removed)
+				this.memo.delete(this.memoKey(key.mailbox, key.uid));
+			for (const msg of added) this.rememberMessage(msg);
+
+			this.lastSync.set(path, Date.now());
+			return cache.getByMailbox(path);
+		})();
+
+		this.inflight.set(path, promise);
+		try {
+			return await promise;
+		} finally {
+			this.inflight.delete(path);
+		}
+	}
+
 	peekMessage(mailbox: string, uid: number): Message | undefined {
 		return this.memo.get(this.memoKey(mailbox, uid));
 	}
@@ -36,33 +63,28 @@ class MessageStore {
 		mailbox: string,
 		uid: number,
 	): Promise<Message | undefined> {
-		const key = this.memoKey(mailbox, uid);
-		const memoed = this.memo.get(key);
+		const memoed = this.peekMessage(mailbox, uid);
 		if (memoed) return memoed;
 
 		const result = await cache.get(mailbox, uid);
-		if (result) this.memo.set(key, result);
+		if (result) this.rememberMessage(result);
 		return result;
 	}
 
-	// reads from cache
 	async getMessages(path: string): Promise<Message[]> {
 		return cache.getByMailbox(path);
 	}
 
-	// removes from cache + search index together
 	async removeMessage(mailbox: string, uid: number) {
 		await cache.delete(mailbox, uid);
 		search.unindex(mailbox, uid);
 		this.memo.delete(this.memoKey(mailbox, uid));
 	}
 
-	// delegates to search
 	async search(query: string, limit?: number): Promise<Message[]> {
 		return search.search(query, limit);
 	}
 
-	// request permission to prevent data eviction
 	async requestPersistentStorage() {
 		if (navigator.storage?.persist) {
 			await navigator.storage.persist();
