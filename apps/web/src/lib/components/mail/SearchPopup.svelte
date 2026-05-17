@@ -3,8 +3,8 @@ import type { Message, MessageMetadata } from "@basalt/types";
 import { Command, Dialog } from "bits-ui";
 import { EnvelopeIcon } from "phosphor-svelte";
 import type { Snippet } from "svelte";
-import { store } from "$lib/message/store";
-import { getTabState } from "$lib/state.svelte";
+import { store } from "$lib/mail/store";
+import { getTabState } from "$lib/state/tabs.svelte";
 
 let {
 	open = $bindable(false),

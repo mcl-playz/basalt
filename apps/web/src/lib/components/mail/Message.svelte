@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Message } from "@basalt/types";
-	import template from "$lib/iframe.html?raw";
+	import template from "$lib/mail/iframe.html?raw";
 
 	let { message }: { message: Message } = $props();
 

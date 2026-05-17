@@ -1,10 +1,10 @@
 <script lang="ts">
 import { Button, Label } from "bits-ui";
 import { EyeClosedIcon, EyeIcon, EyeSlashIcon } from "phosphor-svelte";
-import { authClient } from "$lib/auth-client";
-import { store } from "$lib/message/store";
-	import { cache } from "$lib/message/cache";
-	import { search } from "$lib/message/search";
+import { authClient } from "$lib/auth";
+import { store } from "$lib/mail/store";
+	import { cache } from "$lib/mail/cache";
+	import { search } from "$lib/mail/search";
 
 let email = $state("");
 let password = $state("");

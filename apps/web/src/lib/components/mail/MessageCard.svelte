@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { store } from "$lib/message/store";
+	import { store } from "$lib/mail/store";
 	import { orpc } from "$lib/orpc";
-	import { getTabState } from "$lib/state.svelte";
+	import { getTabState } from "$lib/state/tabs.svelte";
 	import { type MessageMetadata } from "@basalt/types";
 	import { createQuery } from "@tanstack/svelte-query";
 	import { Button, Checkbox } from "bits-ui";

@@ -8,7 +8,7 @@ import {
 	UserIcon,
 } from "phosphor-svelte";
 import { goto } from "$app/navigation";
-import { authClient } from "$lib/auth-client";
+import { authClient } from "$lib/auth";
 
 const session = authClient.useSession();
 

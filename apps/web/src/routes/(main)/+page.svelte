@@ -1,11 +1,12 @@
 <script lang="ts">
 import type { Message as MessageType } from "@basalt/types";
 import { goto } from "$app/navigation";
-import { authClient } from "$lib/auth-client";
-import Message from "$lib/components/Message.svelte";
-import MessageCard from "$lib/components/MessageCard.svelte";
-import { store } from "$lib/message/store";
-import { getMailboxState, getTabState } from "$lib/state.svelte";
+import { authClient } from "$lib/auth";
+import Message from "$lib/components/mail/Message.svelte";
+import MessageCard from "$lib/components/mail/MessageCard.svelte";
+import { store } from "$lib/mail/store";
+import { getMailboxState } from "$lib/state/mailbox.svelte";
+import { getTabState } from "$lib/state/tabs.svelte";
 	import { toast } from "svelte-sonner";
 
 const sessionQuery = authClient.useSession();

@@ -18,12 +18,13 @@ import {
 } from "phosphor-svelte";
 import { onMount } from "svelte";
 import AccountMenu from "$lib/components/AccountMenu.svelte";
-import SearchPopup from "$lib/components/SearchPopup.svelte";
+import SearchPopup from "$lib/components/mail/SearchPopup.svelte";
 import Tab from "$lib/components/Tab.svelte";
-import { search } from "$lib/message/search";
-import { store } from "$lib/message/store";
+import { search } from "$lib/mail/search";
+import { store } from "$lib/mail/store";
 import { orpc } from "$lib/orpc";
-import { setMailboxState, setTabState } from "$lib/state.svelte";
+import { setMailboxState } from "$lib/state/mailbox.svelte";
+import { setTabState } from "$lib/state/tabs.svelte";
 
 const { children } = $props();
 

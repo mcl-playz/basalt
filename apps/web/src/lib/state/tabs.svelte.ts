@@ -16,16 +16,8 @@ interface AttachmentTab extends BaseTab {
 	file: string;
 }
 
-type Tab = MessageTab | AttachmentTab;
-type TabInput = Omit<MessageTab, "id"> | Omit<AttachmentTab, "id">;
-
-class MailboxState {
-	selected = $state<string>();
-
-	select(path: string) {
-		this.selected = path;
-	}
-}
+export type Tab = MessageTab | AttachmentTab;
+export type TabInput = Omit<MessageTab, "id"> | Omit<AttachmentTab, "id">;
 
 class TabState {
 	public activeTabId = $state<number | null>(null);
@@ -34,7 +26,6 @@ class TabState {
 	private nextId = 0;
 
 	new(tab: TabInput) {
-		// don't open duplicates
 		const existing = this.tabs.find((t) => {
 			if (t.type !== tab.type) return false;
 			if (tab.type === "attachment" && t.type === "attachment") {
@@ -78,21 +69,12 @@ class TabState {
 	}
 }
 
-const TAB_STATE_KEY = Symbol("tab");
-const MAILBOX_STATE_KEY = Symbol("mailbox");
+const KEY = Symbol("tabs");
 
 export function setTabState() {
-	return setContext(TAB_STATE_KEY, new TabState());
+	return setContext(KEY, new TabState());
 }
 
 export function getTabState() {
-	return getContext<TabState>(TAB_STATE_KEY);
-}
-
-export function setMailboxState() {
-	return setContext(MAILBOX_STATE_KEY, new MailboxState());
-}
-
-export function getMailboxState() {
-	return getContext<MailboxState>(MAILBOX_STATE_KEY);
+	return getContext<TabState>(KEY);
 }
