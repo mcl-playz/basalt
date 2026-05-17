@@ -16,10 +16,12 @@ import {
 	TrashIcon,
 	TrayIcon,
 } from "phosphor-svelte";
+import { onMount } from "svelte";
 import AccountMenu from "$lib/components/AccountMenu.svelte";
 import SearchPopup from "$lib/components/SearchPopup.svelte";
 import Tab from "$lib/components/Tab.svelte";
 import { search } from "$lib/message/search";
+import { store } from "$lib/message/store";
 import { orpc } from "$lib/orpc";
 import { setMailboxState, setTabState } from "$lib/state.svelte";
 
@@ -29,6 +31,19 @@ const mailboxesQuery = createQuery(orpc.mail.getMailboxes.queryOptions());
 const tabState = setTabState();
 const mailboxState = setMailboxState();
 let mailbox = $state<Mailbox | null>();
+
+onMount(() => {
+	const ric = (
+		window as unknown as {
+			requestIdleCallback?: (cb: () => void) => number;
+		}
+	).requestIdleCallback;
+	const start = () => search.init();
+	if (ric) ric(start);
+	else setTimeout(start, 0);
+
+	store.requestPersistentStorage();
+});
 
 $effect(() => {
 	const mailboxes = $mailboxesQuery.data?.mailboxes;
@@ -41,8 +56,6 @@ $effect(() => {
 		const match = mailboxes.find((x) => x.path === mailboxState.selected);
 		if (match) mailbox = match;
 	}
-
-	search.init();
 });
 
 const isFolderType = (path: string, type: string) =>

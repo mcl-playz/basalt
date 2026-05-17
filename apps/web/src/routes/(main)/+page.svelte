@@ -20,6 +20,7 @@ $effect(() => {
 
 // ---- mailbox list ----
 let messages = $state<MessageType[]>([]);
+let messagesPath = $state<string | null>(null);
 let listLoading = $state(true);
 
 $effect(() => {
@@ -27,8 +28,11 @@ $effect(() => {
 	if (!path) return;
 
 	listLoading = true;
-	messages = [];
 	let cancelled = false;
+	if (messagesPath !== path) {
+		messages = [];
+		messagesPath = path;
+	}
 
 	store.getMessages(path).then((cached) => {
 		if (cancelled) return;
@@ -38,16 +42,16 @@ $effect(() => {
 
 	store
 		.syncMailbox(path)
-		.then(async () => {
+		.then((fresh) => {
 			if (cancelled) return;
-			messages = await store.getMessages(path);
+			messages = fresh;
 		})
 		.catch((err) => {
 			if (cancelled) return;
 			console.error("Failed to refresh mailbox", path, err);
 		})
 		.finally(() => {
-			listLoading = false;
+			if (!cancelled) listLoading = false;
 		});
 
 	return () => {
