@@ -1,87 +1,88 @@
 <script lang="ts">
-	import { store } from "$lib/mail/store";
-	import { orpc } from "$lib/orpc";
-	import { getTabState } from "$lib/state/tabs.svelte";
-	import { type MessageMetadata } from "@basalt/types";
-	import { createQuery } from "@tanstack/svelte-query";
-	import { Button, Checkbox } from "bits-ui";
-	import { CheckIcon, EnvelopeIcon, EnvelopeOpenIcon } from "phosphor-svelte";
-	import type { MouseEventHandler } from "svelte/elements";
+import { type MessageMetadata } from "@basalt/types";
+import { createQuery } from "@tanstack/svelte-query";
+import { Button, Checkbox } from "bits-ui";
+import { CheckIcon, EnvelopeIcon, EnvelopeOpenIcon } from "phosphor-svelte";
+import type { MouseEventHandler } from "svelte/elements";
+import { store } from "$lib/mail/store";
+import { orpc } from "$lib/orpc";
+import { getTabState } from "$lib/state/tabs.svelte";
 
-	let {
-		message,
-		onclick,
-        ondelete,
-	}: {
-		message: MessageMetadata;
-		onclick: MouseEventHandler<HTMLButtonElement>;
-        ondelete?: (msg: MessageMetadata) => void;
-	} = $props();
+let {
+	message,
+	onclick,
+	ondelete,
+}: {
+	message: MessageMetadata;
+	onclick: MouseEventHandler<HTMLButtonElement>;
+	ondelete?: (msg: MessageMetadata) => void;
+} = $props();
 
-    let tabState = getTabState();
+let tabState = getTabState();
 
-	const dateObj = $derived(
-		message.date instanceof Date ? message.date : new Date(message.date),
+const dateObj = $derived(
+	message.date instanceof Date ? message.date : new Date(message.date),
+);
+
+const isToday = (date: Date) => {
+	const today = new Date();
+	return (
+		date.getDate() === today.getDate() &&
+		date.getMonth() === today.getMonth() &&
+		date.getFullYear() === today.getFullYear()
 	);
+};
 
-	const isToday = (date: Date) => {
-		const today = new Date();
-		return (
-			date.getDate() === today.getDate() &&
-			date.getMonth() === today.getMonth() &&
-			date.getFullYear() === today.getFullYear()
-		);
-	};
+const isThisYear = (date: Date) => {
+	return date.getFullYear() === new Date().getFullYear();
+};
 
-	const isThisYear = (date: Date) => {
-		return date.getFullYear() === new Date().getFullYear();
-	};
+const formatTime = new Intl.DateTimeFormat(undefined, {
+	hour: "numeric",
+	minute: "2-digit",
+});
 
-	const formatTime = new Intl.DateTimeFormat(undefined, {
-		hour: "numeric",
-		minute: "2-digit",
-	});
+const formatDate = new Intl.DateTimeFormat(undefined, {
+	month: "short",
+	day: "numeric",
+});
 
-	const formatDate = new Intl.DateTimeFormat(undefined, {
-		month: "short",
-		day: "numeric",
-	});
+const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
+	year: "numeric",
+	month: "short",
+	day: "numeric",
+});
 
-	const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	});
+const deleteMessage = async (e: MouseEvent) => {
+	e.stopPropagation();
+	const tab = tabState.tabs.find(
+		(t) =>
+			t.type === "message" &&
+			t.mailbox === message.mailbox &&
+			t.uid === message.uid,
+	)?.id;
 
-	const deleteMessage = async (e: MouseEvent) => {
-		e.stopPropagation();
-        const tab = tabState.tabs.find(
-            t => t.type === "message" &&
-            t.mailbox === message.mailbox &&
-            t.uid === message.uid
-        )?.id;
+	if (tab) tabState.close(tab);
+	store.removeMessage(message.mailbox, message.uid);
+	ondelete?.(message);
 
-		if(tab) tabState.close(tab);
-	    store.removeMessage(message.mailbox, message.uid);
-        ondelete?.(message)
+	try {
+		await orpc.mail.deleteMessage.call({
+			mailbox: message.mailbox,
+			uid: message.uid,
+		});
+	} catch (error) {
+		console.error(error);
+	}
+};
 
-        try {
-            await orpc.mail.deleteMessage.call({
-                mailbox: message.mailbox,
-                uid: message.uid,
-            });
-        } catch (error) {
-            console.error(error);
-        }
-	};
+const toggleRead = (e: MouseEvent) => {
+	e.stopPropagation();
+	console.log("Toggling read status for", message.uid);
+};
 
-	const toggleRead = (e: MouseEvent) => {
-		e.stopPropagation();
-		console.log("Toggling read status for", message.uid);
-	};
-
-	let initial = $derived(message.sender.charAt(0).toUpperCase());
-	let isUnread = $derived(!message.read);
+let initial = $derived(message.sender.charAt(0).toUpperCase());
+let isUnread = $derived(!message.read);
 </script>
 
 <button

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { loader } from "$lib/state/loader.svelte";
+import { loader } from "$lib/state/loader.svelte";
 
-	function handleAnimationEnd() {
-		if (loader.state === "success") loader.reset();
-	}
+function handleAnimationEnd() {
+	if (loader.state === "success") loader.reset();
+}
 </script>
 
 {#if loader.state !== "idle"}

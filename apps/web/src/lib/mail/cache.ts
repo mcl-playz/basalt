@@ -11,10 +11,7 @@ class MessageCache {
 	async getByMailbox(mailbox: string): Promise<Message[]> {
 		return db.messages
 			.where("[mailbox+date]")
-			.between(
-				[mailbox, Dexie.minKey],
-				[mailbox, Dexie.maxKey],
-			)
+			.between([mailbox, Dexie.minKey], [mailbox, Dexie.maxKey])
 			.reverse()
 			.toArray();
 	}

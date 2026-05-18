@@ -1,10 +1,10 @@
 import { getImapClient } from "@basalt/auth";
 import type { Mailbox, Message } from "@basalt/types";
+import { ORPCError } from "@orpc/client";
 import type { FetchMessageObject } from "imapflow";
 import { simpleParser } from "mailparser";
 import z from "zod";
 import { o, protectedProcedure } from "../index";
-import { ORPCError } from "@orpc/client";
 
 function collapseUidRange(uids: number[]): string {
 	const sorted = [...new Set(uids)].sort((a, b) => a - b);
@@ -30,24 +30,24 @@ export const mailRouter = o.prefix("/mail").router({
 		.handler(async ({ context }) => {
 			const client = await getImapClient(context.session.user.id);
 			const mailboxes = (await client.list()).map<Mailbox>((m) => {
-                let name = m.name;
-                switch (name.toLowerCase()) {
-                    case "inbox":
-                        name = "Inbox";
-                        break;
+				let name = m.name;
+				switch (name.toLowerCase()) {
+					case "inbox":
+						name = "Inbox";
+						break;
 
-                    case "junk":
-                        name = "Spam";
-                        break;
-                }
+					case "junk":
+						name = "Spam";
+						break;
+				}
 
-                return {
-                    ...m,
-                    name,
-                };
-            });
+				return {
+					...m,
+					name,
+				};
+			});
 
-            mailboxes
+			mailboxes;
 
 			return {
 				mailboxes: mailboxes.map<Mailbox>((m) => ({
@@ -81,9 +81,7 @@ export const mailRouter = o.prefix("/mail").router({
 					return { messages: [] };
 				}
 
-				const range = input.uids
-					? collapseUidRange(input.uids)
-					: "1:*";
+				const range = input.uids ? collapseUidRange(input.uids) : "1:*";
 
 				const fetched: FetchMessageObject[] = [];
 				for await (const msg of client.fetch(
@@ -121,18 +119,18 @@ export const mailRouter = o.prefix("/mail").router({
 				);
 
 				return { messages: messages.reverse() };
-            } catch (error) {
-                if (!(error instanceof Error)) {
-                    console.error(error);
-                    throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                        message: "Unknown error",
-                    });
-                }
+			} catch (error) {
+				if (!(error instanceof Error)) {
+					console.error(error);
+					throw new ORPCError("INTERNAL_SERVER_ERROR", {
+						message: "Unknown error",
+					});
+				}
 
-                throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                    message: error.message,
-                    cause: error,
-                });
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: error.message,
+					cause: error,
+				});
 			} finally {
 				lock.release();
 			}
@@ -183,56 +181,58 @@ export const mailRouter = o.prefix("/mail").router({
 						html: parsed.html || "",
 					},
 				};
-            } catch (error) {
-                if (!(error instanceof Error)) {
-                    console.error(error);
-                    throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                        message: "Unknown error",
-                    });
-                }
+			} catch (error) {
+				if (!(error instanceof Error)) {
+					console.error(error);
+					throw new ORPCError("INTERNAL_SERVER_ERROR", {
+						message: "Unknown error",
+					});
+				}
 
-                throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                    message: error.message,
-                    cause: error,
-                });
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: error.message,
+					cause: error,
+				});
 			} finally {
 				lock.release();
 			}
 		}),
-    deleteMessage: protectedProcedure
-        .route({ method: "DELETE", path: "/messages/{mailbox}/{uid}"})
-        .input(z.object({
-            mailbox: z.string(),
-            uid: z.coerce.number(),
-        }))
-        .handler(async ({ context, input }) => {
-            const client = await getImapClient(context.session.user.id);
-            const lock = await client.getMailboxLock(input.mailbox);
+	deleteMessage: protectedProcedure
+		.route({ method: "DELETE", path: "/messages/{mailbox}/{uid}" })
+		.input(
+			z.object({
+				mailbox: z.string(),
+				uid: z.coerce.number(),
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			const client = await getImapClient(context.session.user.id);
+			const lock = await client.getMailboxLock(input.mailbox);
 
 			try {
 				await client.mailboxOpen(input.mailbox);
 
-                await client.messageDelete(input.uid, {
-                    uid: true,
-                });
+				await client.messageDelete(input.uid, {
+					uid: true,
+				});
 
-                return {
-                    success: true,
-                };
-            } catch (error) {
-                if (!(error instanceof Error)) {
-                    console.error(error);
-                    throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                        message: "Unknown error",
-                    });
-                }
+				return {
+					success: true,
+				};
+			} catch (error) {
+				if (!(error instanceof Error)) {
+					console.error(error);
+					throw new ORPCError("INTERNAL_SERVER_ERROR", {
+						message: "Unknown error",
+					});
+				}
 
-                throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                    message: error.message,
-                    cause: error,
-                });
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: error.message,
+					cause: error,
+				});
 			} finally {
 				lock.release();
 			}
-        }),
+		}),
 });

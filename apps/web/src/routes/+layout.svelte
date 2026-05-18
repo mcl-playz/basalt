@@ -4,7 +4,7 @@ import { SvelteQueryDevtools } from "@tanstack/svelte-query-devtools";
 import { Toaster } from "svelte-sonner";
 import { queryClient } from "$lib/orpc";
 import "../app.css";
-	import Loader from "$lib/components/Loader.svelte";
+import Loader from "$lib/components/Loader.svelte";
 
 const { children } = $props();
 </script>

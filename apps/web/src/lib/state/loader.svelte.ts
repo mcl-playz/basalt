@@ -7,9 +7,7 @@ class LoaderState {
 	private status = $state<Exclude<State, "loading">>("idle");
 	private errorTimer: ReturnType<typeof setTimeout> | undefined;
 
-	readonly state: State = $derived(
-		this.count > 0 ? "loading" : this.status,
-	);
+	readonly state: State = $derived(this.count > 0 ? "loading" : this.status);
 
 	track<T>(promise: Promise<T>): Promise<T> {
 		untrack(() => {

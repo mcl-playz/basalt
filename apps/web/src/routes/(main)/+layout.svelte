@@ -1,77 +1,77 @@
 <script lang="ts">
-    import { createQuery } from "@tanstack/svelte-query";
-    import "../../app.css";
-    import type { Mailbox } from "@basalt/types";
-    import { Button } from "bits-ui";
-    import {
-        CaretDoubleLeftIcon,
-        EnvelopeIcon,
-        FireIcon,
-        FolderIcon,
-        MagnifyingGlassIcon,
-        PaperclipIcon,
-        PaperPlaneTiltIcon,
-        PencilIcon,
-        ScrollIcon,
-        TrashIcon,
-        TrayIcon,
-    } from "phosphor-svelte";
-    import { onMount } from "svelte";
-    import AccountMenu from "$lib/components/AccountMenu.svelte";
-    import SearchPopup from "$lib/components/mail/SearchPopup.svelte";
-    import Tab from "$lib/components/Tab.svelte";
-    import { search } from "$lib/mail/search";
-    import { store } from "$lib/mail/store";
-    import { orpc, queryClient } from "$lib/orpc";
-    import { setMailboxState } from "$lib/state/mailbox.svelte";
-    import { setTabState } from "$lib/state/tabs.svelte";
-    import { loader } from "$lib/state/loader.svelte";
+import { createQuery } from "@tanstack/svelte-query";
+import "../../app.css";
+import type { Mailbox } from "@basalt/types";
+import { Button } from "bits-ui";
+import {
+	CaretDoubleLeftIcon,
+	EnvelopeIcon,
+	FireIcon,
+	FolderIcon,
+	MagnifyingGlassIcon,
+	PaperclipIcon,
+	PaperPlaneTiltIcon,
+	PencilIcon,
+	ScrollIcon,
+	TrashIcon,
+	TrayIcon,
+} from "phosphor-svelte";
+import { onMount } from "svelte";
+import AccountMenu from "$lib/components/AccountMenu.svelte";
+import SearchPopup from "$lib/components/mail/SearchPopup.svelte";
+import Tab from "$lib/components/Tab.svelte";
+import { search } from "$lib/mail/search";
+import { store } from "$lib/mail/store";
+import { orpc, queryClient } from "$lib/orpc";
+import { loader } from "$lib/state/loader.svelte";
+import { setMailboxState } from "$lib/state/mailbox.svelte";
+import { setTabState } from "$lib/state/tabs.svelte";
 
-    const { children } = $props();
+const { children } = $props();
 
-    const mailboxOptions = orpc.mail.getMailboxes.queryOptions();
-    const mailboxesQuery = createQuery(mailboxOptions);
-    const tabState = setTabState();
-    const mailboxState = setMailboxState();
-    let mailbox = $state<Mailbox | null>();
+const mailboxOptions = orpc.mail.getMailboxes.queryOptions();
+const mailboxesQuery = createQuery(mailboxOptions);
+const tabState = setTabState();
+const mailboxState = setMailboxState();
+let mailbox = $state<Mailbox | null>();
 
-    onMount(() => {
-        loader.track(queryClient.fetchQuery(mailboxOptions)).catch(() => {});
+onMount(() => {
+	loader.track(queryClient.fetchQuery(mailboxOptions)).catch(() => {});
 
-        const ric = (
-            window as unknown as {
-                requestIdleCallback?: (cb: () => void) => number;
-            }
-        ).requestIdleCallback;
-        const start = () => search.init();
-        if (ric) ric(start);
-        else setTimeout(start, 0);
+	const ric = (
+		window as unknown as {
+			requestIdleCallback?: (cb: () => void) => number;
+		}
+	).requestIdleCallback;
+	const start = () => search.init();
+	if (ric) ric(start);
+	else setTimeout(start, 0);
 
-        store.requestPersistentStorage();
-    });
+	store.requestPersistentStorage();
+});
 
-    $effect(() => {
-        const mailboxes = $mailboxesQuery.data?.mailboxes;
-        if (!mailboxes || mailboxes.length === 0) return;
+$effect(() => {
+	const mailboxes = $mailboxesQuery.data?.mailboxes;
+	if (!mailboxes || mailboxes.length === 0) return;
 
-        if (!mailboxState.selected) {
-            mailboxState.select(mailboxes[0].path);
-            mailbox = mailboxes[0];
-        } else {
-            const match = mailboxes.find((x) => x.path === mailboxState.selected);
-            if (match) mailbox = match;
-        }
-    });
+	if (!mailboxState.selected) {
+		mailboxState.select(mailboxes[0].path);
+		mailbox = mailboxes[0];
+	} else {
+		const match = mailboxes.find((x) => x.path === mailboxState.selected);
+		if (match) mailbox = match;
+	}
+});
 
-    const isFolderType = (path: string, type: string) =>
-        path.toLowerCase().includes(type.toLowerCase());
+const isFolderType = (path: string, type: string) =>
+	path.toLowerCase().includes(type.toLowerCase());
 
-    function handleMailboxSelect(path: string) {
-        const m = $mailboxesQuery.data?.mailboxes.find((x) => x.path === path);
-        if (m) mailbox = m;
-        mailboxState.select(path);
-        tabState.select(null);
-    }
+function handleMailboxSelect(path: string) {
+	const m = $mailboxesQuery.data?.mailboxes.find((x) => x.path === path);
+	if (m) mailbox = m;
+	mailboxState.select(path);
+	tabState.select(null);
+}
 </script>
 
 <div class="h-screen flex">

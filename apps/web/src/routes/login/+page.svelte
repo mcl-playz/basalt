@@ -1,43 +1,43 @@
 <script lang="ts">
-    import { Button, Label } from "bits-ui";
-    import { EyeIcon, EyeSlashIcon } from "phosphor-svelte";
-    import { authClient } from "$lib/auth";
-    import { store } from "$lib/mail/store";
-    import { cache } from "$lib/mail/cache";
-    import { search } from "$lib/mail/search";
-    import { toast } from "svelte-sonner";
+import { Button, Label } from "bits-ui";
+import { EyeIcon, EyeSlashIcon } from "phosphor-svelte";
+import { toast } from "svelte-sonner";
+import { authClient } from "$lib/auth";
+import { cache } from "$lib/mail/cache";
+import { search } from "$lib/mail/search";
+import { store } from "$lib/mail/store";
 
-    let email = $state("");
-    let password = $state("");
-    let showPassword = $state(false);
-    let loading = $state(false);
-    let errorMessage = $state("");
+let email = $state("");
+let password = $state("");
+let showPassword = $state(false);
+let loading = $state(false);
+let errorMessage = $state("");
 
-    let isEmailValid = $derived(email.includes("@") && email.includes("."));
-    let canSubmit = $derived(isEmailValid && password.length >= 8 && !loading);
+let isEmailValid = $derived(email.includes("@") && email.includes("."));
+let canSubmit = $derived(isEmailValid && password.length >= 8 && !loading);
 
-    async function handleLogin(e: Event) {
-        e.preventDefault();
-        loading = true;
-        errorMessage = "";
+async function handleLogin(e: Event) {
+	e.preventDefault();
+	loading = true;
+	errorMessage = "";
 
-        await authClient.signIn.credentials({
-            email,
-            password,
-            fetchOptions: {
-                onSuccess: async () => {
-                    cache.clear();
-                    search.clear();
-                    await store.requestPersistentStorage().then();
-                    window.location.assign("/");
-                },
-                onError: () => {
-                    toast.error("Invalid email or password");
-                },
-            },
-        });
-        loading = false;
-    }
+	await authClient.signIn.credentials({
+		email,
+		password,
+		fetchOptions: {
+			onSuccess: async () => {
+				cache.clear();
+				search.clear();
+				await store.requestPersistentStorage().then();
+				window.location.assign("/");
+			},
+			onError: () => {
+				toast.error("Invalid email or password");
+			},
+		},
+	});
+	loading = false;
+}
 </script>
 
 <div class="min-h-screen flex items-center justify-center px-4">

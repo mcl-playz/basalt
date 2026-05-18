@@ -1,77 +1,77 @@
 <script lang="ts">
-	import { store } from "$lib/mail/store";
-	import { loader } from "$lib/state/loader.svelte";
-	import { getTabState } from "$lib/state/tabs.svelte";
-	import type { Message } from "@basalt/types";
-	import template from "$lib/mail/iframe.html?raw";
+import type { Message } from "@basalt/types";
+import template from "$lib/mail/iframe.html?raw";
+import { store } from "$lib/mail/store";
+import { loader } from "$lib/state/loader.svelte";
+import { getTabState } from "$lib/state/tabs.svelte";
 
-	const tabState = getTabState();
+const tabState = getTabState();
 
-	let iframeEl: HTMLIFrameElement | undefined = $state();
-	let iframeHeight = $state(0);
-	let activeMessage = $state<Message>();
-	let messageLoading = $state(false);
-	let messageError = $state<string | null>(null);
+let iframeEl: HTMLIFrameElement | undefined = $state();
+let iframeHeight = $state(0);
+let activeMessage = $state<Message>();
+let messageLoading = $state(false);
+let messageError = $state<string | null>(null);
 
-    $effect(() => {
-        activeMessage;
-		iframeHeight = 0;
-	});
+$effect(() => {
+	activeMessage;
+	iframeHeight = 0;
+});
 
-	$effect(() => {
-		const tab = tabState.activeTab;
-		if (!tab || tab.type !== "message") {
-			activeMessage = undefined;
-			messageLoading = false;
-			messageError = null;
-			return;
-		}
-
-		const memoed = store.peekMessage(tab.mailbox, tab.uid);
-		if (memoed) {
-			activeMessage = memoed;
-			messageLoading = false;
-			messageError = null;
-			return;
-		}
-
-		let cancelled = false;
-		messageLoading = true;
-		messageError = null;
+$effect(() => {
+	const tab = tabState.activeTab;
+	if (!tab || tab.type !== "message") {
 		activeMessage = undefined;
+		messageLoading = false;
+		messageError = null;
+		return;
+	}
 
-		loader
-			.track(store.getMessage(tab.mailbox, tab.uid))
-			.then((result) => {
-				if (cancelled) return;
-				if (!result) {
-					messageError = "Message not found";
-					return;
-				}
-				activeMessage = result;
-			})
-			.catch((err) => {
-				if (cancelled) return;
-				console.error("Failed to load message", err);
-				messageError = "Failed to load message";
-			})
-			.finally(() => {
-				if (!cancelled) messageLoading = false;
-			});
+	const memoed = store.peekMessage(tab.mailbox, tab.uid);
+	if (memoed) {
+		activeMessage = memoed;
+		messageLoading = false;
+		messageError = null;
+		return;
+	}
 
-		return () => {
-			cancelled = true;
-		};
-	});
+	let cancelled = false;
+	messageLoading = true;
+	messageError = null;
+	activeMessage = undefined;
 
-	function renderIFrameContent(html?: string, text?: string){
-		return template.replace(
-			"{{content}}",
-			html
-				? html
-				: `<pre style="white-space:pre-wrap;font-family:sans-serif;font-size:14px;padding:0;margin:0">${text ?? "(no text content)"}</pre>`,
-		);
-    }
+	loader
+		.track(store.getMessage(tab.mailbox, tab.uid))
+		.then((result) => {
+			if (cancelled) return;
+			if (!result) {
+				messageError = "Message not found";
+				return;
+			}
+			activeMessage = result;
+		})
+		.catch((err) => {
+			if (cancelled) return;
+			console.error("Failed to load message", err);
+			messageError = "Failed to load message";
+		})
+		.finally(() => {
+			if (!cancelled) messageLoading = false;
+		});
+
+	return () => {
+		cancelled = true;
+	};
+});
+
+function renderIFrameContent(html?: string, text?: string) {
+	return template.replace(
+		"{{content}}",
+		html
+			? html
+			: `<pre style="white-space:pre-wrap;font-family:sans-serif;font-size:14px;padding:0;margin:0">${text ?? "(no text content)"}</pre>`,
+	);
+}
 </script>
 
 <svelte:window
