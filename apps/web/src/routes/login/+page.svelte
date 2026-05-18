@@ -1,48 +1,49 @@
 <script lang="ts">
-import { Button, Label } from "bits-ui";
-import { EyeClosedIcon, EyeIcon, EyeSlashIcon } from "phosphor-svelte";
-import { authClient } from "$lib/auth";
-import { store } from "$lib/mail/store";
-	import { cache } from "$lib/mail/cache";
-	import { search } from "$lib/mail/search";
+    import { Button, Label } from "bits-ui";
+    import { EyeIcon, EyeSlashIcon } from "phosphor-svelte";
+    import { authClient } from "$lib/auth";
+    import { store } from "$lib/mail/store";
+    import { cache } from "$lib/mail/cache";
+    import { search } from "$lib/mail/search";
+    import { toast } from "svelte-sonner";
 
-let email = $state("");
-let password = $state("");
-let showPassword = $state(false);
-let loading = $state(false);
-let errorMessage = $state("");
+    let email = $state("");
+    let password = $state("");
+    let showPassword = $state(false);
+    let loading = $state(false);
+    let errorMessage = $state("");
 
-let isEmailValid = $derived(email.includes("@") && email.includes("."));
-let canSubmit = $derived(isEmailValid && password.length >= 8 && !loading);
+    let isEmailValid = $derived(email.includes("@") && email.includes("."));
+    let canSubmit = $derived(isEmailValid && password.length >= 8 && !loading);
 
-async function handleLogin(e: Event) {
-	e.preventDefault();
-	loading = true;
-	errorMessage = "";
+    async function handleLogin(e: Event) {
+        e.preventDefault();
+        loading = true;
+        errorMessage = "";
 
-	await authClient.signIn.credentials({
-		email,
-		password,
-		fetchOptions: {
-			onSuccess: async () => {
-                cache.clear();
-                search.clear();
-				await store.requestPersistentStorage().then();
-				window.location.assign("/");
-			},
-			onError: () => {
-				errorMessage = "Invalid email or password. Please try again.";
-			},
-		},
-	});
-	loading = false;
-}
+        await authClient.signIn.credentials({
+            email,
+            password,
+            fetchOptions: {
+                onSuccess: async () => {
+                    cache.clear();
+                    search.clear();
+                    await store.requestPersistentStorage().then();
+                    window.location.assign("/");
+                },
+                onError: () => {
+                    toast.error("Invalid email or password");
+                },
+            },
+        });
+        loading = false;
+    }
 </script>
 
 <div class="min-h-screen flex items-center justify-center px-4">
 	<div class="max-w-xs w-full">
         <div class="flex items-center justify-center gap-2">
-            <div class="w-6 h-6 bg-indigo-600 rounded shadow-lg shadow-indigo-500/20"></div>
+            <div class="w-6 h-6 bg-orange-500 rounded shadow-lg shadow-orange-400/20"></div>
             <h2 class="text-center text-3xl font-extrabold text-white">Basalt</h2>
         </div>
 		
