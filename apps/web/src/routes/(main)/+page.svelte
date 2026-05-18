@@ -49,8 +49,8 @@
 			})
 			.catch((err) => {
 				if (cancelled) return;
-				toast.error("Failed to refresh mailbox");
-				console.error("Failed to refresh mailbox", path, err);
+                loader.reset();
+				console.warn("Failed to refresh mailbox", path, err);
 			})
 			.finally(() => {
 				if (!cancelled) listLoading = false;
