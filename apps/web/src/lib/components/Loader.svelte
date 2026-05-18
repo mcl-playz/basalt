@@ -16,9 +16,7 @@
 	</div>
 {/if}
 
-<style lang="postcss">
-	@import "tailwindcss";
-
+<style>
 	.loading-bar {
 		height: 100%;
 		width: 100%;
@@ -32,7 +30,7 @@
 
 	.loading-bar[data-state="error"] {
 		background: var(--color-red-400);
-		@apply animate-pulse;
+        animation: var(--animate-pulse);
 	}
 
 	.loading-bar[data-state="success"] {
