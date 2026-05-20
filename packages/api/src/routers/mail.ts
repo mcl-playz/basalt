@@ -8,16 +8,21 @@ import { o, protectedProcedure } from "../index";
 
 function collapseUidRange(uids: number[]): string {
 	const sorted = [...new Set(uids)].sort((a, b) => a - b);
+	if (sorted.length === 0) return "";
+	const first = sorted[0];
+	if (first === undefined) return "";
+	let start: number = first;
+	let end: number = first;
 	const parts: string[] = [];
-	let start = sorted[0];
-	let end = sorted[0];
 	for (let i = 1; i < sorted.length; i++) {
-		if (sorted[i] === end + 1) {
-			end = sorted[i];
+		const uid = sorted[i];
+		if (uid === undefined) continue;
+		if (uid === end + 1) {
+			end = uid;
 		} else {
 			parts.push(start === end ? `${start}` : `${start}:${end}`);
-			start = sorted[i];
-			end = sorted[i];
+			start = uid;
+			end = uid;
 		}
 	}
 	parts.push(start === end ? `${start}` : `${start}:${end}`);
@@ -198,49 +203,49 @@ export const mailRouter = o.prefix("/mail").router({
 			}
 		}),
 	deleteMessage: protectedProcedure
-		.route({ method: "DELETE", path: "/messages/{mailbox}/{uid}" })
-		.input(
-			z.object({
-				mailbox: z.string(),
-				uid: z.coerce.number(),
+        .route({ method: "DELETE", path: "/messages/{mailbox}/{uid}" })
+        .input(
+            z.object({
+                mailbox: z.string(),
+                uid: z.coerce.number(),
                 permanent: z.coerce.boolean().optional().default(false),
-			}),
-		)
-		.handler(async ({ context, input }) => {
-			const client = await getImapClient(context.session.user.id);
-			const lock = await client.getMailboxLock(input.mailbox);
+            }),
+        )
+        .handler(async ({ context, input }) => {
+            const client = await getImapClient(context.session.user.id);
+            const lock = await client.getMailboxLock(input.mailbox);
 
-			try {
-				await client.mailboxOpen(input.mailbox);
+            try {
+                await client.mailboxOpen(input.mailbox);
 
                 if (input.permanent || input.mailbox === "Trash") {
-				await client.messageDelete(input.uid, {
-					uid: true,
-				});
+                    await client.messageDelete(input.uid, {
+                        uid: true,
+                    });
                 } else {
                     await client.messageMove(input.uid, "Trash", {
                         uid: true,
                     });
                 }
 
-				return {
-					success: true,
-				};
-			} catch (error) {
-				if (!(error instanceof Error)) {
-					console.error(error);
+                return {
+                    success: true,
+                };
+            } catch (error) {
+                if (!(error instanceof Error)) {
+                    console.error(error);
 
-					throw new ORPCError("INTERNAL_SERVER_ERROR", {
-						message: "Unknown error",
-					});
-				}
+                    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                        message: "Unknown error",
+                    });
+                }
 
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: error.message,
-					cause: error,
-				});
-			} finally {
-				lock.release();
-			}
-		}),
+                throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                    message: error.message,
+                    cause: error,
+                });
+            } finally {
+                lock.release();
+            }
+        }),
 });
