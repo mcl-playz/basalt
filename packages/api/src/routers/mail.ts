@@ -203,6 +203,7 @@ export const mailRouter = o.prefix("/mail").router({
 			z.object({
 				mailbox: z.string(),
 				uid: z.coerce.number(),
+                permanent: z.coerce.boolean().optional().default(false),
 			}),
 		)
 		.handler(async ({ context, input }) => {
@@ -212,9 +213,15 @@ export const mailRouter = o.prefix("/mail").router({
 			try {
 				await client.mailboxOpen(input.mailbox);
 
+                if (input.permanent || input.mailbox === "Trash") {
 				await client.messageDelete(input.uid, {
 					uid: true,
 				});
+                } else {
+                    await client.messageMove(input.uid, "Trash", {
+                        uid: true,
+                    });
+                }
 
 				return {
 					success: true,
@@ -222,6 +229,7 @@ export const mailRouter = o.prefix("/mail").router({
 			} catch (error) {
 				if (!(error instanceof Error)) {
 					console.error(error);
+
 					throw new ORPCError("INTERNAL_SERVER_ERROR", {
 						message: "Unknown error",
 					});
