@@ -11,6 +11,9 @@
 		"./styles.css": "./src/lib/styles.css",
 		"./*": {
 			"default": "./src/*.ts"
+		},
+		"./components/*": {
+			"default": "./src/lib/components/*.svelte"
 		}
 	},
 	"scripts": {
@@ -19,7 +22,8 @@
 		"check": "biome check src"
 	},
 	"peerDependencies": {
-		"svelte": "^5.0.0"
+		"svelte": "^5.0.0",
+		"bits-ui": "^2.18.0"
 	},
 	"devDependencies": {
 		"@basalt/config": "workspace:*",
