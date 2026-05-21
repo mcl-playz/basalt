@@ -9,6 +9,7 @@ import {
 } from "phosphor-svelte";
 import { goto } from "$app/navigation";
 import { authClient } from "$lib/auth";
+import DropdownItem from "@basalt/ui-kit/components/DropdownItem";
 
 const session = authClient.useSession();
 
@@ -45,32 +46,12 @@ async function handleSignOut() {
 	<DropdownMenu.Portal>
 		<DropdownMenu.Content class="m-2 origin-bottom-left">
 			{#if $session.data}
-				<DropdownMenu.Item>
-					<div class="flex items-center">
-						<UserIcon class="menu-icon" />
-						Profile
-					</div>
-				</DropdownMenu.Item>
-				<DropdownMenu.Item>
-					<div class="flex items-center">
-						<GearSixIcon class="menu-icon" />
-						Settings
-					</div>
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator class="mx-1 my-1 h-px bg-neutral-800" />
-				<DropdownMenu.Item onclick={handleSignOut}>
-					<div class="flex items-center">
-						<SignOutIcon class="menu-icon" />
-						Sign Out
-					</div>
-				</DropdownMenu.Item>
+				<DropdownItem icon={UserIcon} title="Profile" />
+				<DropdownItem icon={GearSixIcon} title="Settings" />
+				<DropdownMenu.Separator />
+				<DropdownItem icon={SignOutIcon} title="Sign Out" onclick={handleSignOut} />
 			{:else}
-				<DropdownMenu.Item onclick={handleSignIn}>
-					<div class="flex items-center">
-						<SignInIcon class="menu-icon" />
-						Sign In
-					</div>
-				</DropdownMenu.Item>
+				<DropdownItem icon={SignInIcon} title="Sign In" onclick={handleSignIn} />
 			{/if}
 		</DropdownMenu.Content>
 	</DropdownMenu.Portal>
