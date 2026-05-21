@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source "../**/*.{svelte,ts}";
+
 /* Chrome/Edge/Safari */
 *::-webkit-scrollbar {
 	width: 6px;
