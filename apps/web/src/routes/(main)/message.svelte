@@ -64,7 +64,7 @@ $effect(() => {
 	};
 });
 
-function renderIFrameContent(html?: string, text?: string) {
+function renderBody(html?: string, text?: string) {
 	return template.replace(
 		"{{content}}",
 		html
@@ -121,7 +121,7 @@ function renderIFrameContent(html?: string, text?: string) {
                 bind:this={iframeEl}
                 sandbox="allow-scripts"
                 title="Content"
-                srcdoc={renderIFrameContent(activeMessage.html, activeMessage.text)}
+                srcdoc={renderBody(activeMessage.html, activeMessage.text)}
                 class="w-full border-none bg-transparent transition-opacity duration-100"
                 style="
                     width: 100%;
