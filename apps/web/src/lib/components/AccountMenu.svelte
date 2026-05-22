@@ -10,6 +10,7 @@ import {
 } from "phosphor-svelte";
 import { goto } from "$app/navigation";
 import { authClient } from "$lib/auth";
+import { mail } from "$lib/mail";
 
 const session = authClient.useSession();
 
@@ -20,7 +21,8 @@ async function handleSignIn() {
 async function handleSignOut() {
 	await authClient.signOut({
 		fetchOptions: {
-			onSuccess: () => {
+			onSuccess: async () => {
+                await mail.clear();
 				goto("/");
 			},
 		},
