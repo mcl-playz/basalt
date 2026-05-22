@@ -16,7 +16,7 @@ import {
 	TrashIcon,
 } from "phosphor-svelte";
 import template from "$lib/mail/iframe.html?raw";
-import { store } from "$lib/mail/store";
+import { mail } from "$lib/mail";
 import { loader } from "$lib/state/loader.svelte";
 import { getTabState } from "$lib/state/tabs.svelte";
 
@@ -42,7 +42,7 @@ $effect(() => {
 		return;
 	}
 
-	const memoed = store.peekMessage(tab.mailbox, tab.uid);
+	const memoed = mail.peekMessage(tab.mailbox, tab.uid);
 	if (memoed) {
 		message = memoed;
 		messageLoading = false;
@@ -56,7 +56,7 @@ $effect(() => {
 	message = undefined;
 
 	loader
-		.track(store.getMessage(tab.mailbox, tab.uid))
+		.track(mail.getMessage(tab.mailbox, tab.uid))
 		.then((result) => {
 			if (cancelled) return;
 			if (!result) {

@@ -21,7 +21,7 @@ import AccountMenu from "$lib/components/AccountMenu.svelte";
 import SearchPopup from "$lib/components/mail/SearchPopup.svelte";
 import Tab from "$lib/components/Tab.svelte";
 import { search } from "$lib/mail/search";
-import { store } from "$lib/mail/store";
+import { mail } from "$lib/mail";
 import { orpc, queryClient } from "$lib/orpc";
 import { loader } from "$lib/state/loader.svelte";
 import { setMailboxState } from "$lib/state/mailbox.svelte";
@@ -47,7 +47,7 @@ onMount(() => {
 	if (ric) ric(start);
 	else setTimeout(start, 0);
 
-	store.requestPersistentStorage();
+	mail.requestPersistentStorage();
 });
 
 $effect(() => {

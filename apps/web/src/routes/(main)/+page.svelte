@@ -4,7 +4,7 @@ import { toast } from "svelte-sonner";
 import { goto } from "$app/navigation";
 import { authClient } from "$lib/auth";
 import MessageCard from "$lib/components/mail/MessageCard.svelte";
-import { store } from "$lib/mail/store";
+import { mail } from "$lib/mail";
 import { loader } from "$lib/state/loader.svelte";
 import { getMailboxState } from "$lib/state/mailbox.svelte";
 import { getTabState } from "$lib/state/tabs.svelte";
@@ -35,14 +35,14 @@ $effect(() => {
 		messagesPath = path;
 	}
 
-	store.getMessages(path).then((cached) => {
+	mail.getMessages(path).then((cached) => {
 		if (cancelled) return;
 		messages = cached;
 		if (cached.length > 0) listLoading = false;
 	});
 
 	loader
-		.track(store.syncMailbox(path))
+		.track(mail.syncMailbox(path))
 		.then((fresh) => {
 			if (cancelled) return;
 			messages = fresh;

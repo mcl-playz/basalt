@@ -3,7 +3,7 @@ import type { Message, MessageMetadata } from "@basalt/types";
 import { Command, Dialog } from "bits-ui";
 import { EnvelopeIcon } from "phosphor-svelte";
 import type { Snippet } from "svelte";
-import { store } from "$lib/mail/store";
+import { mail } from "$lib/mail";
 import { getTabState } from "$lib/state/tabs.svelte";
 
 let {
@@ -21,7 +21,7 @@ let tabState = getTabState();
 $effect(() => {
 	const q = query;
 	let cancelled = false;
-	store.search(q).then((r) => {
+	mail.search(q).then((r) => {
 		if (!cancelled) results = r;
 	});
 	return () => {

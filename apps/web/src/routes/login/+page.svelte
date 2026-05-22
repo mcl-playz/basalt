@@ -5,7 +5,7 @@ import { toast } from "svelte-sonner";
 import { authClient } from "$lib/auth";
 import { cache } from "$lib/mail/cache";
 import { search } from "$lib/mail/search";
-import { store } from "$lib/mail/store";
+import { mail } from "$lib/mail";
 
 let email = $state("");
 let password = $state("");
@@ -28,7 +28,7 @@ async function handleLogin(e: Event) {
 			onSuccess: async () => {
 				cache.clear();
 				search.clear();
-				await store.requestPersistentStorage().then();
+				await mail.requestPersistentStorage().then();
 				window.location.assign("/");
 			},
 			onError: ({ error }) => {

@@ -5,17 +5,17 @@ import { search } from "./search";
 const SYNC_TTL_MS = 30_000;
 const MEMO_LIMIT = 200;
 
-class MessageStore {
+class Mail {
 	private memo = new Map<string, Message>();
 	private lastSync = new Map<string, number>();
 	private inflight = new Map<string, Promise<Message[]>>();
 
-	private memoKey(mailbox: string, uid: number) {
+	private getMemoKey(mailbox: string, uid: number) {
 		return `${mailbox}:${uid}`;
 	}
 
 	private rememberMessage(message: Message) {
-		const key = this.memoKey(message.mailbox, message.uid);
+		const key = this.getMemoKey(message.mailbox, message.uid);
 		if (this.memo.has(key)) this.memo.delete(key);
 		this.memo.set(key, message);
 		if (this.memo.size > MEMO_LIMIT) {
@@ -40,7 +40,7 @@ class MessageStore {
 			search.bulkIndex(added);
 
 			for (const key of removed)
-				this.memo.delete(this.memoKey(key.mailbox, key.uid));
+				this.memo.delete(this.getMemoKey(key.mailbox, key.uid));
 			for (const msg of added) this.rememberMessage(msg);
 
 			this.lastSync.set(path, Date.now());
@@ -56,7 +56,7 @@ class MessageStore {
 	}
 
 	peekMessage(mailbox: string, uid: number): Message | undefined {
-		return this.memo.get(this.memoKey(mailbox, uid));
+		return this.memo.get(this.getMemoKey(mailbox, uid));
 	}
 
 	async getMessage(
@@ -78,7 +78,7 @@ class MessageStore {
 	async removeMessage(mailbox: string, uid: number) {
 		await cache.delete(mailbox, uid);
 		search.unindex(mailbox, uid);
-		this.memo.delete(this.memoKey(mailbox, uid));
+		this.memo.delete(this.getMemoKey(mailbox, uid));
 	}
 
 	async search(query: string, limit?: number): Promise<Message[]> {
@@ -92,4 +92,4 @@ class MessageStore {
 	}
 }
 
-export const store = new MessageStore();
+export const mail = new Mail();

@@ -4,7 +4,7 @@ import { createQuery } from "@tanstack/svelte-query";
 import { Button, Checkbox } from "bits-ui";
 import { CheckIcon, EnvelopeIcon, EnvelopeOpenIcon } from "phosphor-svelte";
 import type { MouseEventHandler } from "svelte/elements";
-import { store } from "$lib/mail/store";
+import { mail } from "$lib/mail";
 import { orpc } from "$lib/orpc";
 import { getTabState } from "$lib/state/tabs.svelte";
 
@@ -63,7 +63,7 @@ const deleteMessage = async (e: MouseEvent) => {
 	)?.id;
 
 	if (tab) tabState.close(tab);
-	store.removeMessage(message.mailbox, message.uid);
+	mail.removeMessage(message.mailbox, message.uid);
 	ondelete?.(message);
 
 	try {
