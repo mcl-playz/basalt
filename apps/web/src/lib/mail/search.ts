@@ -1,6 +1,6 @@
 import type { Message, MessageKey } from "@basalt/types";
 import { Document } from "flexsearch";
-import { type DexieMessageKey, db } from "./db";
+import { type DexieMessageKey, db } from "./store";
 
 class MessageSearch {
 	readonly idx;

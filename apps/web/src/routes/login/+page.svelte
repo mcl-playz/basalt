@@ -3,7 +3,7 @@ import { Button, Label } from "bits-ui";
 import { EyeIcon, EyeSlashIcon } from "phosphor-svelte";
 import { toast } from "svelte-sonner";
 import { authClient } from "$lib/auth";
-import { cache } from "$lib/mail/cache";
+import { store } from "$lib/mail/store";
 import { search } from "$lib/mail/search";
 import { mail } from "$lib/mail";
 
@@ -26,8 +26,7 @@ async function handleLogin(e: Event) {
 		password,
 		fetchOptions: {
 			onSuccess: async () => {
-				cache.clear();
-				search.clear();
+				await mail.clear();
 				await mail.requestPersistentStorage().then();
 				window.location.assign("/");
 			},

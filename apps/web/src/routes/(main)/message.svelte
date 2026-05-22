@@ -42,21 +42,13 @@ $effect(() => {
 		return;
 	}
 
-	const memoed = mail.peekMessage(tab.mailbox, tab.uid);
-	if (memoed) {
-		message = memoed;
-		messageLoading = false;
-		messageError = null;
-		return;
-	}
-
 	let cancelled = false;
 	messageLoading = true;
 	messageError = null;
 	message = undefined;
 
 	loader
-		.track(mail.getMessage(tab.mailbox, tab.uid))
+		.track(mail.get(tab.mailbox, tab.uid))
 		.then((result) => {
 			if (cancelled) return;
 			if (!result) {

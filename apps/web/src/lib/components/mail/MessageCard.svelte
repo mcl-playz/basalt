@@ -63,17 +63,8 @@ const deleteMessage = async (e: MouseEvent) => {
 	)?.id;
 
 	if (tab) tabState.close(tab);
-	mail.removeMessage(message.mailbox, message.uid);
+	mail.delete(message.mailbox, message.uid);
 	ondelete?.(message);
-
-	try {
-		await orpc.mail.deleteMessage.call({
-			mailbox: message.mailbox,
-			uid: message.uid,
-		});
-	} catch (error) {
-		console.error(error);
-	}
 };
 
 const toggleRead = (e: MouseEvent) => {

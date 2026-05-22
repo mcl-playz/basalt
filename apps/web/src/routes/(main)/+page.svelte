@@ -42,7 +42,7 @@ $effect(() => {
 	});
 
 	loader
-		.track(mail.syncMailbox(path))
+		.track(mail.getMessages(path))
 		.then((fresh) => {
 			if (cancelled) return;
 			messages = fresh;
