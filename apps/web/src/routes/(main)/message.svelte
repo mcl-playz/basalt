@@ -4,24 +4,40 @@ import template from "$lib/mail/iframe.html?raw";
 import { store } from "$lib/mail/store";
 import { loader } from "$lib/state/loader.svelte";
 import { getTabState } from "$lib/state/tabs.svelte";
+import { Button, DropdownMenu } from "bits-ui";
+import {
+	ArrowBendDoubleUpLeftIcon,
+	ArrowBendUpLeftIcon,
+	ArrowRightIcon,
+	ArrowSquareOutIcon,
+	CaretDownIcon,
+	EnvelopeIcon,
+	EnvelopeOpenIcon,
+	FileIcon,
+	GlobeIcon,
+	PrinterIcon,
+	StarIcon,
+	TrashIcon,
+} from "phosphor-svelte";
+import DropdownItem from "@basalt/ui-kit/components/DropdownItem";
 
 const tabState = getTabState();
 
 let iframeEl: HTMLIFrameElement | undefined = $state();
 let iframeHeight = $state(0);
-let activeMessage = $state<Message>();
+let message = $state<Message>();
 let messageLoading = $state(false);
 let messageError = $state<string | null>(null);
 
 $effect(() => {
-	activeMessage;
+	message;
 	iframeHeight = 0;
 });
 
 $effect(() => {
 	const tab = tabState.activeTab;
 	if (!tab || tab.type !== "message") {
-		activeMessage = undefined;
+		message = undefined;
 		messageLoading = false;
 		messageError = null;
 		return;
@@ -29,7 +45,7 @@ $effect(() => {
 
 	const memoed = store.peekMessage(tab.mailbox, tab.uid);
 	if (memoed) {
-		activeMessage = memoed;
+		message = memoed;
 		messageLoading = false;
 		messageError = null;
 		return;
@@ -38,7 +54,7 @@ $effect(() => {
 	let cancelled = false;
 	messageLoading = true;
 	messageError = null;
-	activeMessage = undefined;
+	message = undefined;
 
 	loader
 		.track(store.getMessage(tab.mailbox, tab.uid))
@@ -48,7 +64,7 @@ $effect(() => {
 				messageError = "Message not found";
 				return;
 			}
-			activeMessage = result;
+			message = result;
 		})
 		.catch((err) => {
 			if (cancelled) return;
@@ -73,6 +89,10 @@ function renderBody(html?: string, text?: string) {
 	);
 }
 </script>
+
+{#snippet buttonSeparator()}
+    <div class="border-r border-neutral-600 rounded-full h-[65%] mt-1.5 m-0.5"></div>
+{/snippet}
 
 <svelte:window
 	onmessage={(e) => {
@@ -99,29 +119,73 @@ function renderBody(html?: string, text?: string) {
 		</div>
 	{/if}
 
-	{#if activeMessage}
+	{#if message}
 		<article
 			class="flex flex-col gap-4 p-6 w-full"
 		>
-			<header class="flex flex-col gap-1 border-b border-neutral-800 pb-4">
-				<h1 class="text-xl font-medium">
-					{activeMessage.subject}
-				</h1>
+            <header class="flex justify-between border-b border-neutral-800 pb-4 w-full">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-xl font-medium">
+                        {message.subject}
+                    </h1>
 
-				<div class="text-sm text-neutral-400 flex justify-between">
-					<span>{activeMessage.sender}</span>
-
-					<time>
-						{new Date(activeMessage.date).toLocaleString()}
-					</time>
-				</div>
-			</header>
+                    <div class="text-sm text-neutral-400">
+                        <span>{message.sender}</span>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                    <div class="flex gap-px">
+                        <Button.Root data-minimal title="Star">
+                            <StarIcon />
+                        </Button.Root>
+                        {@render buttonSeparator()}
+                        <Button.Root data-minimal title="Reply">
+                            <ArrowBendUpLeftIcon />
+                        </Button.Root>
+                        <Button.Root data-minimal title="Reply All">
+                            <ArrowBendDoubleUpLeftIcon />
+                        </Button.Root>
+                        <Button.Root data-minimal title="Forward">
+                            <ArrowRightIcon />
+                        </Button.Root>
+                        {@render buttonSeparator()}
+                        <DropdownMenu.Root>
+                            <DropdownMenu.Trigger>
+                                <Button.Root data-minimal>
+                                    <CaretDownIcon />
+                                </Button.Root>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Portal>
+                                <DropdownMenu.Content class="mr-6 m-0 origin-top-right">
+                                    <DropdownItem icon={message.read ? EnvelopeIcon : EnvelopeOpenIcon} title={message.read ? "Mark as unread" : "Mark as read"} />
+                                    <DropdownMenu.Separator />
+                                    <DropdownItem icon={PrinterIcon} title="Print" />
+                                    <DropdownMenu.Sub>
+                                        <DropdownItem subtrigger icon={FileIcon} title="Save as" />
+                                        <DropdownMenu.Portal>
+                                            <DropdownMenu.SubContent sideOffset={8}>
+                                                <DropdownItem icon={GlobeIcon} title="HTML (.html)" />
+                                                <DropdownItem icon={EnvelopeIcon} title="EML (.eml)" />
+                                            </DropdownMenu.SubContent>
+                                        </DropdownMenu.Portal>
+                                    </DropdownMenu.Sub>
+                                    <DropdownMenu.Separator />
+                                    <DropdownItem icon={TrashIcon} title="Delete" />
+                                </DropdownMenu.Content>
+                            </DropdownMenu.Portal>
+                        </DropdownMenu.Root>
+                    </div>
+                    <time class="text-sm text-neutral-400">
+                        {new Date(message.date).toLocaleString()}
+                    </time>
+                </div>
+            </header>
 
 			<iframe
                 bind:this={iframeEl}
                 sandbox="allow-scripts"
                 title="Content"
-                srcdoc={renderBody(activeMessage.html, activeMessage.text)}
+                srcdoc={renderBody(message.html, message.text)}
                 class="w-full border-none bg-transparent transition-opacity duration-100"
                 style="
                     width: 100%;
