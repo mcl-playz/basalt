@@ -1,18 +1,18 @@
 <script lang="ts">
 import { DropdownMenu } from "bits-ui";
-import type { Component, } from "svelte";
-import type { MouseEventHandler } from "svelte/elements";
 import { CaretRightIcon } from "phosphor-svelte";
+import type { Component } from "svelte";
+import type { MouseEventHandler } from "svelte/elements";
 
 let {
 	icon: Icon,
 	title,
-    subtrigger = false,
+	subtrigger = false,
 	onclick,
 }: {
 	icon: Component;
 	title: string;
-    subtrigger?: boolean;
+	subtrigger?: boolean;
 	onclick?: MouseEventHandler<HTMLButtonElement | HTMLDivElement>;
 } = $props();
 

@@ -1,15 +1,11 @@
 <script lang="ts">
 import type { Message } from "@basalt/types";
-import template from "$lib/mail/iframe.html?raw";
-import { store } from "$lib/mail/store";
-import { loader } from "$lib/state/loader.svelte";
-import { getTabState } from "$lib/state/tabs.svelte";
+import DropdownItem from "@basalt/ui-kit/components/DropdownItem";
 import { Button, DropdownMenu } from "bits-ui";
 import {
 	ArrowBendDoubleUpLeftIcon,
 	ArrowBendUpLeftIcon,
 	ArrowRightIcon,
-	ArrowSquareOutIcon,
 	CaretDownIcon,
 	EnvelopeIcon,
 	EnvelopeOpenIcon,
@@ -19,7 +15,10 @@ import {
 	StarIcon,
 	TrashIcon,
 } from "phosphor-svelte";
-import DropdownItem from "@basalt/ui-kit/components/DropdownItem";
+import template from "$lib/mail/iframe.html?raw";
+import { store } from "$lib/mail/store";
+import { loader } from "$lib/state/loader.svelte";
+import { getTabState } from "$lib/state/tabs.svelte";
 
 const tabState = getTabState();
 

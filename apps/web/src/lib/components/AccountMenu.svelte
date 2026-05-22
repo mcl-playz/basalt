@@ -1,4 +1,5 @@
 <script lang="ts">
+import DropdownItem from "@basalt/ui-kit/components/DropdownItem";
 import { Avatar, DropdownMenu } from "bits-ui";
 import {
 	GearSixIcon,
@@ -9,7 +10,6 @@ import {
 } from "phosphor-svelte";
 import { goto } from "$app/navigation";
 import { authClient } from "$lib/auth";
-import DropdownItem from "@basalt/ui-kit/components/DropdownItem";
 
 const session = authClient.useSession();
 

@@ -203,49 +203,49 @@ export const mailRouter = o.prefix("/mail").router({
 			}
 		}),
 	deleteMessage: protectedProcedure
-        .route({ method: "DELETE", path: "/messages/{mailbox}/{uid}" })
-        .input(
-            z.object({
-                mailbox: z.string(),
-                uid: z.coerce.number(),
-                permanent: z.coerce.boolean().optional().default(false),
-            }),
-        )
-        .handler(async ({ context, input }) => {
-            const client = await getImapClient(context.session.user.id);
-            const lock = await client.getMailboxLock(input.mailbox);
+		.route({ method: "DELETE", path: "/messages/{mailbox}/{uid}" })
+		.input(
+			z.object({
+				mailbox: z.string(),
+				uid: z.coerce.number(),
+				permanent: z.coerce.boolean().optional().default(false),
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			const client = await getImapClient(context.session.user.id);
+			const lock = await client.getMailboxLock(input.mailbox);
 
-            try {
-                await client.mailboxOpen(input.mailbox);
+			try {
+				await client.mailboxOpen(input.mailbox);
 
-                if (input.permanent || input.mailbox === "Trash") {
-                    await client.messageDelete(input.uid, {
-                        uid: true,
-                    });
-                } else {
-                    await client.messageMove(input.uid, "Trash", {
-                        uid: true,
-                    });
-                }
+				if (input.permanent || input.mailbox === "Trash") {
+					await client.messageDelete(input.uid, {
+						uid: true,
+					});
+				} else {
+					await client.messageMove(input.uid, "Trash", {
+						uid: true,
+					});
+				}
 
-                return {
-                    success: true,
-                };
-            } catch (error) {
-                if (!(error instanceof Error)) {
-                    console.error(error);
+				return {
+					success: true,
+				};
+			} catch (error) {
+				if (!(error instanceof Error)) {
+					console.error(error);
 
-                    throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                        message: "Unknown error",
-                    });
-                }
+					throw new ORPCError("INTERNAL_SERVER_ERROR", {
+						message: "Unknown error",
+					});
+				}
 
-                throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                    message: error.message,
-                    cause: error,
-                });
-            } finally {
-                lock.release();
-            }
-        }),
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: error.message,
+					cause: error,
+				});
+			} finally {
+				lock.release();
+			}
+		}),
 });

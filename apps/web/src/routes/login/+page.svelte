@@ -32,11 +32,11 @@ async function handleLogin(e: Event) {
 				window.location.assign("/");
 			},
 			onError: ({ error }) => {
-                if(error.status === 401){
-                    toast.error("Invalid email or password");
-                    return;
-                }
-                toast.error("Internal Server Error");
+				if (error.status === 401) {
+					toast.error("Invalid email or password");
+					return;
+				}
+				toast.error("Internal Server Error");
 			},
 		},
 	});
