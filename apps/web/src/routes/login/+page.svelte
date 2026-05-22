@@ -31,8 +31,12 @@ async function handleLogin(e: Event) {
 				await store.requestPersistentStorage().then();
 				window.location.assign("/");
 			},
-			onError: () => {
-				toast.error("Invalid email or password");
+			onError: ({ error }) => {
+                if(error.status === 401){
+                    toast.error("Invalid email or password");
+                    return;
+                }
+                toast.error("Internal Server Error");
 			},
 		},
 	});
