@@ -55,6 +55,16 @@ class TabState {
 		}
 	}
 
+    closeMessage(mailbox: string, uid: number) {
+        const tab = this.tabs.find(
+            (t) => t.type === "message" && t.mailbox === mailbox && t.uid === uid,
+        )?.id;
+
+        if (tab !== undefined) {
+            this.close(tab);
+        }
+    }
+
 	select(tabId: number | null) {
 		if (tabId === null) {
 			this.activeTabId = null;

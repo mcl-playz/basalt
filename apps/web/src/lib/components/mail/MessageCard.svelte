@@ -52,15 +52,7 @@ const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
 
 async function deleteMessage(e: MouseEvent){
 	e.stopPropagation();
-	const tab = tabState.tabs.find(
-		(t) =>
-			t.type === "message" &&
-			t.mailbox === message.mailbox &&
-			t.uid === message.uid,
-	)?.id;
-
-	if (tab) tabState.close(tab);
-
+	tabState.closeMessage(message.mailbox, message.uid);
 	try {
 		await mail.delete(message.mailbox, message.uid);
 		toast.success("Successfully deleted message");
