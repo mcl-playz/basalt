@@ -24,19 +24,31 @@ const tabState = getTabState();
 
 let iframeEl: HTMLIFrameElement | undefined = $state();
 let iframeHeight = $state(0);
-let message = $state<Message>();
+let loaded = $state<Message>();
 let messageLoading = $state(false);
 let messageError = $state<string | null>(null);
 
+const activeMessageTab = $derived(
+	tabState.activeTab?.type === "message" ? tabState.activeTab : null,
+);
+
+const message = $derived<Message | undefined>(
+	activeMessageTab
+		? mail.peek(activeMessageTab.mailbox, activeMessageTab.uid) ?? loaded
+		: undefined,
+);
+
+const srcdoc = $derived(message ? renderBody(message.html, message.text) : "");
+
 $effect(() => {
-	message;
+	srcdoc;
 	iframeHeight = 0;
 });
 
 $effect(() => {
-	const tab = tabState.activeTab;
-	if (!tab || tab.type !== "message") {
-		message = undefined;
+	const tab = activeMessageTab;
+	if (!tab) {
+		loaded = undefined;
 		messageLoading = false;
 		messageError = null;
 		return;
@@ -45,7 +57,6 @@ $effect(() => {
 	let cancelled = false;
 	messageLoading = true;
 	messageError = null;
-	message = undefined;
 
 	loader
 		.track(mail.get(tab.mailbox, tab.uid))
@@ -55,7 +66,7 @@ $effect(() => {
 				messageError = "Message not found";
 				return;
 			}
-			message = result;
+			loaded = result;
 		})
 		.catch((err) => {
 			if (cancelled) return;
@@ -176,7 +187,7 @@ function renderBody(html?: string, text?: string) {
                 bind:this={iframeEl}
                 sandbox="allow-scripts"
                 title="Content"
-                srcdoc={renderBody(message.html, message.text)}
+                srcdoc={srcdoc}
                 class="w-full border-none bg-transparent transition-opacity duration-100"
                 style="
                     width: 100%;

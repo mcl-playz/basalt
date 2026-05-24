@@ -1,21 +1,18 @@
 <script lang="ts">
 import { type MessageMetadata } from "@basalt/types";
-import { createQuery } from "@tanstack/svelte-query";
 import { Button, Checkbox } from "bits-ui";
 import { CheckIcon, EnvelopeIcon, EnvelopeOpenIcon } from "phosphor-svelte";
 import type { MouseEventHandler } from "svelte/elements";
+import { toast } from "svelte-sonner";
 import { mail } from "$lib/mail";
-import { orpc } from "$lib/orpc";
 import { getTabState } from "$lib/state/tabs.svelte";
 
 let {
 	message,
 	onclick,
-	ondelete,
 }: {
 	message: MessageMetadata;
 	onclick: MouseEventHandler<HTMLButtonElement>;
-	ondelete?: (msg: MessageMetadata) => void;
 } = $props();
 
 let tabState = getTabState();
@@ -53,7 +50,7 @@ const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
 	day: "numeric",
 });
 
-const deleteMessage = async (e: MouseEvent) => {
+async function deleteMessage(e: MouseEvent){
 	e.stopPropagation();
 	const tab = tabState.tabs.find(
 		(t) =>
@@ -63,13 +60,19 @@ const deleteMessage = async (e: MouseEvent) => {
 	)?.id;
 
 	if (tab) tabState.close(tab);
-	mail.delete(message.mailbox, message.uid);
-	ondelete?.(message);
+
+	try {
+		await mail.delete(message.mailbox, message.uid);
+		toast.success("Successfully deleted message");
+	} catch (err) {
+		console.error("Failed to delete message", err);
+		toast.error("Failed to delete message");
+	}
 };
 
-const toggleRead = (e: MouseEvent) => {
+function toggleRead(e: MouseEvent){
 	e.stopPropagation();
-	console.log("Toggling read status for", message.uid);
+	mail.setRead(message.mailbox, message.uid, !message.read);
 };
 
 let initial = $derived(message.sender.charAt(0).toUpperCase());

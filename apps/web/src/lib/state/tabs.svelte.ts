@@ -25,7 +25,7 @@ class TabState {
 
 	private nextId = 0;
 
-	new(tab: TabInput) {
+	new(tab: TabInput): boolean {
 		const existing = this.tabs.find((t) => {
 			if (t.type !== tab.type) return false;
 			if (tab.type === "attachment" && t.type === "attachment") {
@@ -38,12 +38,13 @@ class TabState {
 		});
 		if (existing) {
 			this.select(existing.id);
-			return;
+			return false;
 		}
 
 		const newTab = { ...tab, id: this.nextId++ } as Tab;
 		this.tabs.push(newTab);
 		this.select(newTab.id);
+        return true;
 	}
 
 	close(tabId: number) {
