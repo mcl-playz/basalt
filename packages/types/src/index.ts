@@ -17,8 +17,11 @@ export interface MessageBody extends MessageKey {
 
 export interface Message extends MessageMetadata, MessageBody {}
 
+export type MailboxRole = "inbox" | "sent" | "drafts" | "trash" | "spam" | "archive" | null;
+
 export interface Mailbox {
 	path: string;
 	name: string;
 	delimiter: string;
+    role: MailboxRole
 }

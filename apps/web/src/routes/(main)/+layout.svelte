@@ -63,9 +63,6 @@ $effect(() => {
 	}
 });
 
-const isFolderType = (path: string, type: string) =>
-	path.toLowerCase().includes(type.toLowerCase());
-
 function handleMailboxSelect(path: string) {
 	const m = $mailboxesQuery.data?.mailboxes.find((x) => x.path === path);
 	if (m) mailbox = m;
@@ -102,20 +99,20 @@ function handleMailboxSelect(path: string) {
                     onclick={() => handleMailboxSelect(mailbox.path)}
                     class="w-full flex text-sm transition-all px-2 py-1.5
                     {mailboxState.selected === mailbox.path
-                        ? 'bg-neutral-800/75 text-white font-medium shadow-xsxl'
+                        ? 'bg-neutral-800/75 text-white font-medium shadow-xxs'
                         : 'text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200'}"
                     data-minimal
                 >
                     <div class="flex items-center gap-3">
-                        {#if isFolderType(mailbox.name.toLowerCase(), "inbox")}
+                        {#if mailbox.role == "inbox"}
                             <TrayIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.name.toLowerCase(), "sent")}
+                        {:else if mailbox.role == "sent"}
                             <PaperPlaneTiltIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.name.toLowerCase(), "drafts")}
+                        {:else if mailbox.role == "drafts"}
                             <ScrollIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.name.toLowerCase(), "spam")}
+                        {:else if mailbox.role == "spam"}
                             <FireIcon size="1.15rem" />
-                        {:else if isFolderType(mailbox.name.toLowerCase(), "trash")}
+                        {:else if mailbox.role == "trash"}
                             <TrashIcon size="1.15rem" />
                         {:else}
                             <FolderIcon size="1.15rem" />

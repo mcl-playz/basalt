@@ -1,5 +1,5 @@
 import { getImapClient } from "@basalt/auth";
-import type { Mailbox, Message } from "@basalt/types";
+import type { Mailbox, MailboxRole, Message } from "@basalt/types";
 import { ORPCError } from "@orpc/client";
 import type { FetchMessageObject } from "imapflow";
 import { simpleParser } from "mailparser";
@@ -34,14 +34,25 @@ export const mailRouter = o.prefix("/mail").router({
 		.route({ method: "GET", path: "/mailboxes" })
 		.handler(async ({ context }) => {
 			const client = await getImapClient(context.session.user.id);
+
+            const ROLE_MAP: Record<string, MailboxRole> = {
+                "\\Inbox": "inbox",
+                "\\Sent": "sent",
+                "\\Drafts": "drafts",
+                "\\Trash": "trash",
+                "\\Junk": "spam",
+                "\\Archive": "archive"
+            };
+
 			const mailboxes = (await client.list()).map<Mailbox>((m) => {
 				let name = m.name;
-				switch (name.toLowerCase()) {
+                const role = ROLE_MAP[m.specialUse ?? ""] ?? null;
+				switch (role) {
 					case "inbox":
 						name = "Inbox";
 						break;
 
-					case "junk":
+					case "spam":
 						name = "Spam";
 						break;
 				}
@@ -49,6 +60,7 @@ export const mailRouter = o.prefix("/mail").router({
 				return {
 					...m,
 					name,
+                    role
 				};
 			});
 
@@ -59,6 +71,7 @@ export const mailRouter = o.prefix("/mail").router({
 					path: m.path,
 					name: m.name,
 					delimiter: m.delimiter,
+                    role: m.role
 				})),
 			};
 		}),
@@ -216,14 +229,17 @@ export const mailRouter = o.prefix("/mail").router({
 			const lock = await client.getMailboxLock(input.mailbox);
 
 			try {
-				await client.mailboxOpen(input.mailbox);
+				const mailbox = await client.mailboxOpen(input.mailbox);
 
-				if (input.permanent || input.mailbox === "Trash") {
+				if (input.permanent || ["\\Drafts", "\\Trash", "\\Junk"].includes(mailbox.specialUse || "")) {
 					await client.messageDelete(input.uid, {
 						uid: true,
 					});
 				} else {
-					await client.messageMove(input.uid, "Trash", {
+                    const mailboxList = await client.list();
+                    const trashPath = mailboxList.find(mb => mb.specialUse === "\\Trash")?.path ?? "Trash";
+
+					await client.messageMove(input.uid, trashPath, {
 						uid: true,
 					});
 				}
@@ -234,7 +250,6 @@ export const mailRouter = o.prefix("/mail").router({
 			} catch (error) {
 				if (!(error instanceof Error)) {
 					console.error(error);
-
 					throw new ORPCError("INTERNAL_SERVER_ERROR", {
 						message: "Unknown error",
 					});
