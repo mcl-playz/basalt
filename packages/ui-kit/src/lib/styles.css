@@ -43,7 +43,7 @@
 	}
 
 	[data-checkbox-root][data-state="checked"] {
-		@apply bg-neutral-300 text-neutral-800;
+		@apply bg-orange-300 text-neutral-800;
 	}
 
 	[data-checkbox-root][data-state="unchecked"] {
