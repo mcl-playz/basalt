@@ -263,4 +263,41 @@ export const mailRouter = o.prefix("/mail").router({
 				lock.release();
 			}
 		}),
+    setFlags: protectedProcedure
+        .route({ method: "PATCH", path: "/messages/{mailbox}/{uid}/flags" })
+        .input(
+            z.object({
+                mailbox: z.string(),
+                uid: z.coerce.number(),
+                add: z.array(z.string()).optional().default([]),
+                remove: z.array(z.string()).optional().default([]),
+            }),
+        )
+        .handler(async ({ context, input }) => {
+            const client = await getImapClient(context.session.user.id);
+            const lock = await client.getMailboxLock(input.mailbox);
+
+            try {
+                await client.mailboxOpen(input.mailbox);
+
+                if (input.add.length > 0) {
+                    await client.messageFlagsAdd(input.uid, input.add, { uid: true });
+                }
+                if (input.remove.length > 0) {
+                    await client.messageFlagsRemove(input.uid, input.remove, { uid: true });
+                }
+
+                return { success: true };
+            } catch (error) {
+                if (!(error instanceof Error)) {
+                    throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Unknown error" });
+                }
+                throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                    message: error.message,
+                    cause: error,
+                });
+            } finally {
+                lock.release();
+            }
+        }),
 });
