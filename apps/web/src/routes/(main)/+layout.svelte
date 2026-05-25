@@ -55,7 +55,7 @@ $effect(() => {
 	if (!mailboxes || mailboxes.length === 0) return;
 
 	if (!mailboxState.selected) {
-		mailboxState.select(mailboxes[0].path);
+		mailboxState.open(mailboxes[0].path);
 		mailbox = mailboxes[0];
 	} else {
 		const match = mailboxes.find((x) => x.path === mailboxState.selected);
@@ -66,8 +66,8 @@ $effect(() => {
 function handleMailboxSelect(path: string) {
 	const m = $mailboxesQuery.data?.mailboxes.find((x) => x.path === path);
 	if (m) mailbox = m;
-	mailboxState.select(path);
-	tabState.select(null);
+	mailboxState.open(path);
+	tabState.open(null);
 }
 </script>
 
@@ -135,12 +135,12 @@ function handleMailboxSelect(path: string) {
         <!-- Header -->
         <header class="flex items-center py-2 z-10 m-0 min-w-0">
             <div class="flex justify-start gap-1.5 overflow-x-auto w-full min-w-0 pr-1.5">
-                <Tab icon={TrayIcon} title={mailbox?.name ?? ""} selected={tabState.activeTabId === null} closeBtn={false} shrink={false} open={() => tabState.select(null)}/>
+                <Tab icon={TrayIcon} title={mailbox?.name ?? ""} selected={tabState.activeTabId === null} closeBtn={false} shrink={false} open={() => tabState.open(null)}/>
                 {#each tabState.tabs as tab}
                     <Tab
                         icon={tab.type == "message" ? EnvelopeIcon : PaperclipIcon}
                         title={tab.title} selected={tabState.activeTabId === tab.id}
-                        open={() => tabState.select(tab.id)}
+                        open={() => tabState.open(tab.id)}
                         close={() => tabState.close(tab.id)}
                     />
                 {/each}

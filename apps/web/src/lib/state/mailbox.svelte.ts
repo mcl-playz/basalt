@@ -3,7 +3,7 @@ import { getContext, setContext } from "svelte";
 class MailboxState {
 	selected = $state<string>();
 
-	select(path: string) {
+	open(path: string) {
 		this.selected = path;
 	}
 }

@@ -37,13 +37,13 @@ class TabState {
 			return false;
 		});
 		if (existing) {
-			this.select(existing.id);
+			this.open(existing.id);
 			return false;
 		}
 
 		const newTab = { ...tab, id: this.nextId++ } as Tab;
 		this.tabs.push(newTab);
-		this.select(newTab.id);
+		this.open(newTab.id);
         return true;
 	}
 
@@ -51,7 +51,7 @@ class TabState {
 		const idx = this.tabs.findIndex((t) => t.id === tabId);
 		this.tabs = this.tabs.filter((t) => t.id !== tabId);
 		if (this.activeTabId === tabId) {
-			this.select(this.tabs.at(idx)?.id ?? null);
+			this.open(this.tabs.at(idx)?.id ?? null);
 		}
 	}
 
@@ -65,7 +65,7 @@ class TabState {
         }
     }
 
-	select(tabId: number | null) {
+	open(tabId: number | null) {
 		if (tabId === null) {
 			this.activeTabId = null;
 			return;
