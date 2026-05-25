@@ -8,6 +8,7 @@ export interface MessageMetadata extends MessageKey {
 	subject: string;
 	date: Date;
 	read: boolean;
+    starred: boolean;
 }
 
 export interface MessageBody extends MessageKey {

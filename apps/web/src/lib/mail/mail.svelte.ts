@@ -201,6 +201,11 @@ class Mail {
 				: willRemove.includes("\\Seen")
 					? false
 					: current.read,
+			starred: willAdd.includes("\\Flagged")
+				? true
+				: willRemove.includes("\\Flagged")
+					? false
+					: current.starred,
 		};
 
 		await store.put(next);
@@ -220,6 +225,14 @@ class Mail {
 			mailbox,
 			uid,
 			read ? { add: ["\\Seen"] } : { remove: ["\\Seen"] },
+		);
+	}
+
+	async setStarred(mailbox: string, uid: number, flagged: boolean) {
+		return this.setFlags(
+			mailbox,
+			uid,
+			flagged ? { add: ["\\Flagged"] } : { remove: ["\\Flagged"] },
 		);
 	}
 

@@ -130,6 +130,7 @@ export const mailRouter = o.prefix("/mail").router({
 								"unknown-sender",
 							date: msg.envelope?.date ?? new Date(),
 							read: msg.flags?.has("\\Seen") ?? false,
+							starred: msg.flags?.has("\\Flagged") ?? false,
 							text: parsed?.text ?? "",
 							html: parsed?.html || "",
 						};
