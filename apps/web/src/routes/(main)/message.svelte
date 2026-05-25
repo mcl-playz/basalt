@@ -90,6 +90,13 @@ function renderBody(html?: string, text?: string) {
 			: `<pre style="white-space:pre-wrap;font-family:sans-serif;font-size:14px;padding:0;margin:0">${text ?? "(no text content)"}</pre>`,
 	);
 }
+
+function handleMessageDelete(){
+    const mailbox = message?.mailbox ?? "";
+    const uid = message?.uid ?? -1;
+    mail.delete(mailbox, uid);
+    tabState.closeMessage(mailbox, uid)
+}
 </script>
 
 {#snippet buttonSeparator()}
@@ -172,7 +179,7 @@ function renderBody(html?: string, text?: string) {
                                         </DropdownMenu.Portal>
                                     </DropdownMenu.Sub>
                                     <DropdownMenu.Separator />
-                                    <DropdownItem icon={TrashIcon} title="Delete" />
+                                    <DropdownItem icon={TrashIcon} title="Delete" onclick={handleMessageDelete} />
                                 </DropdownMenu.Content>
                             </DropdownMenu.Portal>
                         </DropdownMenu.Root>
