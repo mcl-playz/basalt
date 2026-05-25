@@ -47,12 +47,12 @@ class MessageStore {
 	async bulkPut(messages: Message[]) {
 		return db.messages.bulkPut(messages);
 	}
-	async delete(mailbox: string, uid: number) {
+	async delete({ mailbox, uid }: MessageKey) {
 		return db.messages.delete([mailbox, uid]);
 	}
 	async bulkDelete(keys: MessageKey[]) {
 		return db.messages.bulkDelete(
-			keys.map((key) => [key.mailbox, key.uid] as DexieMessageKey),
+			keys.map(({ mailbox, uid }) => [mailbox, uid] as DexieMessageKey),
 		);
 	}
 	async clear() {

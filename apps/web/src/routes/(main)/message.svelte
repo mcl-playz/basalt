@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { Message } from "@basalt/types";
+import type { Message, MessageKey } from "@basalt/types";
 import DropdownItem from "@basalt/ui-kit/components/DropdownItem";
 import { Button, DropdownMenu } from "bits-ui";
 import {
@@ -34,7 +34,7 @@ const activeMessageTab = $derived(
 
 const message = $derived<Message | undefined>(
 	activeMessageTab
-		? mail.peek(activeMessageTab.mailbox, activeMessageTab.uid) ?? loaded
+		? mail.peek(activeMessageTab.key) ?? loaded
 		: undefined,
 );
 
@@ -59,7 +59,7 @@ $effect(() => {
 	messageError = null;
 
 	loader
-		.track(mail.get(tab.mailbox, tab.uid))
+		.track(mail.get(tab.key))
 		.then((result) => {
 			if (cancelled) return;
 			if (!result) {
@@ -94,8 +94,9 @@ function renderBody(html?: string, text?: string) {
 function handleMessageDelete(){
     const mailbox = message?.mailbox ?? "";
     const uid = message?.uid ?? -1;
-    mail.delete(mailbox, uid);
-    tabState.closeMessage(mailbox, uid)
+    const key: MessageKey = { mailbox, uid };
+    mail.delete(key);
+    tabState.closeMessage(key)
 }
 </script>
 
@@ -144,7 +145,7 @@ function handleMessageDelete(){
                 </div>
                 <div class="flex flex-col items-end gap-1">
                     <div class="flex gap-px">
-                        <Button.Root data-minimal title={message.starred ? "Unstar" : "Star"} onclick={() => mail.setStarred(message.mailbox, message.uid, !message.starred)}>
+                        <Button.Root data-minimal title={message.starred ? "Unstar" : "Star"} onclick={() => mail.setStarred(message, !message.starred)}>
                             <StarIcon weight={message.starred ? "fill" : "regular"}/>
                         </Button.Root>
                         {@render buttonSeparator()}
@@ -166,7 +167,7 @@ function handleMessageDelete(){
                             </DropdownMenu.Trigger>
                             <DropdownMenu.Portal>
                                 <DropdownMenu.Content class="mr-6 m-0 origin-top-right">
-                                    <DropdownItem icon={message.read ? EnvelopeIcon : EnvelopeOpenIcon} title={message.read ? "Mark as unread" : "Mark as read"} onclick={() => mail.setRead(message.mailbox, message.uid, !message.read)} />
+                                    <DropdownItem icon={message.read ? EnvelopeIcon : EnvelopeOpenIcon} title={message.read ? "Mark as unread" : "Mark as read"} onclick={() => mail.setRead(message, !message.read)} />
                                     <DropdownMenu.Separator />
                                     <DropdownItem icon={PrinterIcon} title="Print" />
                                     <DropdownMenu.Sub>

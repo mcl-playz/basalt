@@ -1,7 +1,8 @@
-import type { Message, MessageKey } from "@basalt/types";
+import type { Message } from "@basalt/types";
 import { client } from "$lib/orpc";
 import { search } from "./search";
 import { store } from "./store";
+import { MessageKey } from "./keys";
 
 const SYNC_TTL_MS = 30_000;
 
@@ -12,22 +13,14 @@ class Mail {
 	private inflightList = new Map<string, Promise<Message[]>>();
 	private inflightGet = new Map<string, Promise<Message | undefined>>();
 
-	private key(mailbox: string, uid: number) {
-		return `${mailbox}:${uid}`;
-	}
-
-	private find(mailbox: string, uid: number): Message | undefined {
-		return this.lists[mailbox]?.find((m) => m.uid === uid);
-	}
-
-	private replace(mailbox: string, uid: number, msg: Message) {
+	private replace({ mailbox, uid }: MessageKey, msg: Message) {
 		const list = this.lists[mailbox];
 		if (!list) return;
 		const i = list.findIndex((m) => m.uid === uid);
 		if (i >= 0) list[i] = msg;
 	}
 
-	private remove(mailbox: string, uid: number) {
+	private remove({ mailbox, uid }: MessageKey) {
 		const list = this.lists[mailbox];
 		if (!list) return;
 		this.lists[mailbox] = list.filter((m) => m.uid !== uid);
@@ -45,16 +38,17 @@ class Mail {
 		this.lists[mailbox] = next;
 	}
 
-	peek(mailbox: string, uid: number): Message | undefined {
-		return this.find(mailbox, uid);
+    peek({ mailbox, uid }: MessageKey): Message | undefined {
+		return this.lists[mailbox]?.find((m) => m.uid === uid);
 	}
 
-	async get(mailbox: string, uid: number): Promise<Message | undefined> {
-		const hot = this.find(mailbox, uid);
+	async get(key: MessageKey): Promise<Message | undefined> {
+        const { mailbox, uid } = key;
+		const hot = this.peek(key);
 		if (hot) return hot;
 
-		const key = this.key(mailbox, uid);
-		const existing = this.inflightGet.get(key);
+		const k = MessageKey.serialize(key);
+		const existing = this.inflightGet.get(k);
 		if (existing) return existing;
 
 		const promise = (async () => {
@@ -73,11 +67,11 @@ class Mail {
 				this.insert(mailbox, msg);
 				return msg;
 			} finally {
-				this.inflightGet.delete(key);
+				this.inflightGet.delete(k);
 			}
 		})();
 
-		this.inflightGet.set(key, promise);
+		this.inflightGet.set(k, promise);
 		return promise;
 	}
 
@@ -159,12 +153,13 @@ class Mail {
 		return { added, removed };
 	}
 
-	async delete(mailbox: string, uid: number, permanent = false) {
-		const previous = this.find(mailbox, uid);
+	async delete(key: MessageKey, permanent = false) {
+        const { mailbox, uid } = key;
+		const previous = this.peek(key);
 
-		await store.delete(mailbox, uid);
-		search.unindex(mailbox, uid);
-		this.remove(mailbox, uid);
+		await store.delete(key);
+		search.unindex(key);
+		this.remove(key);
 
 		try {
 			await client.mail.deleteMessage({ mailbox, uid, permanent });
@@ -185,11 +180,11 @@ class Mail {
 	}
 
 	async setFlags(
-		mailbox: string,
-		uid: number,
+		key: MessageKey,
 		flags: { add?: string[]; remove?: string[] },
 	) {
-		const current = await this.get(mailbox, uid);
+        const { mailbox, uid } = key;
+		const current = await this.get(key);
 		if (!current) return;
 
 		const willAdd = flags.add ?? [];
@@ -209,29 +204,27 @@ class Mail {
 		};
 
 		await store.put(next);
-		this.replace(mailbox, uid, next);
+		this.replace(key, next);
 
 		try {
 			await client.mail.setFlags({ mailbox, uid, ...flags });
 		} catch (err) {
 			await store.put(current);
-			this.replace(mailbox, uid, current);
+			this.replace(key, current);
 			throw err;
 		}
 	}
 
-	async setRead(mailbox: string, uid: number, read: boolean) {
+	async setRead(key: MessageKey, read: boolean) {
 		return this.setFlags(
-			mailbox,
-			uid,
+			key,
 			read ? { add: ["\\Seen"] } : { remove: ["\\Seen"] },
 		);
 	}
 
-	async setStarred(mailbox: string, uid: number, flagged: boolean) {
+	async setStarred(key: MessageKey, flagged: boolean) {
 		return this.setFlags(
-			mailbox,
-			uid,
+			key,
 			flagged ? { add: ["\\Flagged"] } : { remove: ["\\Flagged"] },
 		);
 	}

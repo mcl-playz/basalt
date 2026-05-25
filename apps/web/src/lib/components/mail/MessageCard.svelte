@@ -52,9 +52,9 @@ const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
 
 async function deleteMessage(e: MouseEvent){
 	e.stopPropagation();
-	tabState.closeMessage(message.mailbox, message.uid);
+	tabState.closeMessage(message);
 	try {
-		await mail.delete(message.mailbox, message.uid);
+		await mail.delete(message);
 		toast.success("Successfully deleted message");
 	} catch (err) {
 		console.error("Failed to delete message", err);
@@ -64,7 +64,7 @@ async function deleteMessage(e: MouseEvent){
 
 function toggleRead(e: MouseEvent){
 	e.stopPropagation();
-	mail.setRead(message.mailbox, message.uid, !message.read);
+	mail.setRead(message, !message.read);
 };
 
 let initial = $derived(message.sender.charAt(0).toUpperCase());

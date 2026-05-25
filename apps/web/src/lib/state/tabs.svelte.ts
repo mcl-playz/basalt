@@ -1,4 +1,5 @@
 import { getContext, setContext } from "svelte";
+import { MessageKey } from "$lib/mail/keys";
 
 interface BaseTab {
 	id: number;
@@ -7,8 +8,7 @@ interface BaseTab {
 
 interface MessageTab extends BaseTab {
 	type: "message";
-	mailbox: string;
-	uid: number;
+	key: MessageKey;
 }
 
 interface AttachmentTab extends BaseTab {
@@ -25,14 +25,14 @@ class TabState {
 
 	private nextId = 0;
 
-	new(tab: TabInput): boolean {
+	create(tab: TabInput): boolean {
 		const existing = this.tabs.find((t) => {
 			if (t.type !== tab.type) return false;
 			if (tab.type === "attachment" && t.type === "attachment") {
 				return t.file === tab.file;
 			}
 			if (tab.type === "message" && t.type === "message") {
-				return t.uid === tab.uid && t.mailbox === tab.mailbox;
+				return MessageKey.equals(t.key, tab.key);
 			}
 			return false;
 		});
@@ -55,9 +55,9 @@ class TabState {
 		}
 	}
 
-    closeMessage(mailbox: string, uid: number) {
+    closeMessage(key: MessageKey) {
         const tab = this.tabs.find(
-            (t) => t.type === "message" && t.mailbox === mailbox && t.uid === uid,
+            (t) => t.type === "message" && MessageKey.equals(t.key, key),
         )?.id;
 
         if (tab !== undefined) {

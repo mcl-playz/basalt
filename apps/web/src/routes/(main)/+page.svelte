@@ -42,14 +42,13 @@ $effect(() => {
 });
 
 function handleMessageSelect(msg: MessageType) {
-	const created = tabState.new({
+	const created = tabState.create({
 		type: "message",
-		mailbox: msg.mailbox,
-		uid: msg.uid,
+		key: msg,
 		title: msg.subject,
 	});
     if (created && !msg.read) {
-        mail.setRead(msg.mailbox, msg.uid, true).catch((err) => {
+        mail.setRead(msg, true).catch((err) => {
             console.error("Failed to mark as read", err);
         });
     }

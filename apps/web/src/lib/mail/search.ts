@@ -1,6 +1,7 @@
-import type { Message, MessageKey } from "@basalt/types";
+import type { Message } from "@basalt/types";
 import { Document } from "flexsearch";
 import { type DexieMessageKey, db } from "./store";
+import { MessageKey } from "./keys";
 
 class MessageSearch {
 	readonly idx;
@@ -39,12 +40,12 @@ class MessageSearch {
 		return this.initPromise;
 	}
 
-	index(message: Message) {
+	index(msg: Message) {
 		this.idx.add({
-			_id: `${message.mailbox}\0${message.uid}`,
-			subject: message.subject,
-			sender: message.sender,
-			text: message.text ?? "",
+			_id: MessageKey.serialize(msg),
+			subject: msg.subject,
+			sender: msg.sender,
+			text: msg.text ?? "",
 		});
 	}
 
@@ -52,12 +53,12 @@ class MessageSearch {
 		for (const m of messages) this.index(m);
 	}
 
-	unindex(mailbox: string, uid: number) {
-		this.idx.remove(`${mailbox}\0${uid}`);
+	unindex(key: MessageKey) {
+		this.idx.remove(MessageKey.serialize(key));
 	}
 
 	bulkUnindex(keys: MessageKey[]) {
-		for (const { mailbox, uid } of keys) this.unindex(mailbox, uid);
+		for (const key of keys) this.unindex(key);
 	}
 
 	async search(query: string, limit?: number): Promise<Message[]> {

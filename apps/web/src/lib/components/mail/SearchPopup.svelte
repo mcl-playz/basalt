@@ -31,10 +31,9 @@ $effect(() => {
 
 function handleSelection(message: Message) {
 	open = false;
-	tabState.new({
+	tabState.create({
 		type: "message",
-		mailbox: message.mailbox,
-		uid: message.uid,
+		key: message,
 		title: message.subject,
 	});
 }
