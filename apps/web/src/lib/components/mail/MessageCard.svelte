@@ -1,7 +1,13 @@
 <script lang="ts">
 import { type MessageMetadata } from "@basalt/types";
 import { Button, Checkbox } from "bits-ui";
-import { CheckIcon, EnvelopeIcon, EnvelopeOpenIcon } from "phosphor-svelte";
+import {
+	CheckIcon,
+	EnvelopeIcon,
+	EnvelopeOpenIcon,
+	StarIcon,
+	TrashIcon,
+} from "phosphor-svelte";
 import type { MouseEventHandler } from "svelte/elements";
 import { toast } from "svelte-sonner";
 import { mail } from "$lib/mail";
@@ -50,7 +56,7 @@ const formatDateWithYear = new Intl.DateTimeFormat(undefined, {
 	day: "numeric",
 });
 
-async function deleteMessage(e: MouseEvent){
+async function deleteMessage(e: MouseEvent) {
 	e.stopPropagation();
 	tabState.closeMessage(message);
 	try {
@@ -60,22 +66,29 @@ async function deleteMessage(e: MouseEvent){
 		console.error("Failed to delete message", err);
 		toast.error("Failed to delete message");
 	}
-};
+}
 
-function toggleRead(e: MouseEvent){
+function toggleRead(e: MouseEvent) {
 	e.stopPropagation();
 	mail.setRead(message, !message.read);
-};
+}
+
+function toggleStarred(e: MouseEvent) {
+	e.stopPropagation();
+	mail.setStarred(message, !message.starred);
+}
 
 let initial = $derived(message.sender.charAt(0).toUpperCase());
-let isUnread = $derived(!message.read);
+let unread = $derived(!message.read);
+let starred = $derived(message.starred);
 </script>
 
 <button
-	class="text-left w-full h-11 group flex items-center gap-4 px-3 py-2 transition-colors cursor-pointer
-    {message.read == false
+	class="text-left w-full h-11 group flex items-center gap-4 px-3 py-2 transition-[background-color,color] cursor-pointer
+    {unread
 		? 'bg-neutral-800/75'
-		: 'hover:bg-neutral-800/40'} hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.25)]"
+		: 'hover:bg-neutral-800/40'} hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.25)]
+    	{starred ? "bg-amber-500/5!" : ""}"
 	{onclick}
 >
 	<div class="flex items-center gap-3">
@@ -108,7 +121,7 @@ let isUnread = $derived(!message.read);
 	</div>
 
 	<div
-		class="w-48 shrink-0 truncate text-sm {isUnread
+		class="w-48 shrink-0 truncate text-sm {unread
 			? 'text-neutral-100 font-semibold'
 			: 'text-neutral-400 font-normal'}"
 	>
@@ -116,7 +129,7 @@ let isUnread = $derived(!message.read);
 	</div>
 
 	<div
-		class="flex-1 truncate text-sm {isUnread
+		class="flex-1 truncate text-sm {unread
 			? 'text-neutral-200 font-medium'
 			: 'text-neutral-500'}"
 	>
@@ -124,53 +137,53 @@ let isUnread = $derived(!message.read);
 	</div>
 
 	<div class="flex items-center gap-2 min-w-25 justify-end">
-		<div class="hidden group-hover:flex items-center gap-1">
+        <div class="hidden group-hover:flex items-center gap-1">
 			<Button.Root
-				onclick={toggleRead}
-				title={isUnread ? "Mark as read" : "Mark as unread"}
-				class="hover:bg-neutral-700"
+				onclick={toggleStarred}
+				title={!starred ? "Star" : "Unstar"}
+				class={starred ? "text-amber-500" : ""}
 				data-minimal
 			>
-				{#if isUnread}
-					<EnvelopeOpenIcon />
-				{:else}
-					<EnvelopeIcon />
-				{/if}
+				<StarIcon
+					weight={starred ? "fill" : "regular"}
+				/>
 			</Button.Root>
 
-			<Button.Root
-				onclick={deleteMessage}
-				class="hover:bg-red-900/30 hover:text-red-500"
-				title="Delete"
-				data-minimal
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					><path d="M3 6h18" /><path
-						d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
-					/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg
-				>
-			</Button.Root>
-		</div>
+            <Button.Root
+                onclick={toggleRead}
+                title={unread ? "Mark as read" : "Mark as unread"}
+                class="hover:bg-neutral-700"
+                data-minimal
+            >
+                {#if unread}
+                    <EnvelopeOpenIcon />
+                {:else}
+                    <EnvelopeIcon />
+                {/if}
+            </Button.Root>
 
-		<span
-			class="text-xs text-neutral-500 whitespace-nowrap group-hover:hidden"
-		>
-			{#if isToday(dateObj)}
-				{formatTime.format(dateObj)}
-			{:else if isThisYear(dateObj)}
-				{formatDate.format(dateObj)}
-			{:else}
-				{formatDateWithYear.format(dateObj)}
-			{/if}
-		</span>
-	</div>
+            <Button.Root
+                onclick={deleteMessage}
+                class="hover:bg-red-900/30 hover:text-red-500"
+                title="Delete"
+                data-minimal
+            >
+                <TrashIcon />
+            </Button.Root>
+        </div>
+
+		{#if starred}
+			<div class="size-1.5 rounded-full bg-amber-400 shrink-0 group-hover:hidden"></div>
+		{/if}
+
+        <span class="text-xs text-neutral-500 whitespace-nowrap group-hover:hidden">
+            {#if isToday(dateObj)}
+                {formatTime.format(dateObj)}
+            {:else if isThisYear(dateObj)}
+                {formatDate.format(dateObj)}
+            {:else}
+                {formatDateWithYear.format(dateObj)}
+            {/if}
+        </span>
+    </div>
 </button>

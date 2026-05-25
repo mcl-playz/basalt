@@ -145,7 +145,7 @@ function handleMessageDelete(){
                 </div>
                 <div class="flex flex-col items-end gap-1">
                     <div class="flex gap-px">
-                        <Button.Root data-minimal title={message.starred ? "Unstar" : "Star"} onclick={() => mail.setStarred(message, !message.starred)}>
+                        <Button.Root data-minimal title={message.starred ? "Unstar" : "Star"} onclick={() => mail.setStarred(message, !message.starred)} class={message.starred ? "text-amber-500" : ""}>
                             <StarIcon weight={message.starred ? "fill" : "regular"}/>
                         </Button.Root>
                         {@render buttonSeparator()}
