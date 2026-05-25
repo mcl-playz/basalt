@@ -166,7 +166,7 @@ function handleMessageDelete(){
                             </DropdownMenu.Trigger>
                             <DropdownMenu.Portal>
                                 <DropdownMenu.Content class="mr-6 m-0 origin-top-right">
-                                    <DropdownItem icon={message.read ? EnvelopeIcon : EnvelopeOpenIcon} title={message.read ? "Mark as unread" : "Mark as read"} />
+                                    <DropdownItem icon={message.read ? EnvelopeIcon : EnvelopeOpenIcon} title={message.read ? "Mark as unread" : "Mark as read"} onclick={() => mail.setRead(message.mailbox, message.uid, !message.read)} />
                                     <DropdownMenu.Separator />
                                     <DropdownItem icon={PrinterIcon} title="Print" />
                                     <DropdownMenu.Sub>
