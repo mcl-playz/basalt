@@ -16,7 +16,7 @@ import {
 	TrashIcon,
 	TrayIcon,
 } from "phosphor-svelte";
-import { onMount } from "svelte";
+import { onMount, untrack } from "svelte";
 import AccountMenu from "$lib/components/AccountMenu.svelte";
 import SearchPopup from "$lib/components/mail/SearchPopup.svelte";
 import Tab from "$lib/components/Tab.svelte";
@@ -26,6 +26,7 @@ import { orpc, queryClient } from "$lib/orpc";
 import { loader } from "$lib/state/loader.svelte";
 import { setMailboxState } from "$lib/state/mailbox.svelte";
 import { setTabState } from "$lib/state/tabs.svelte";
+import { setSelectionState } from "$lib/state/selection.svelte";
 
 const { children } = $props();
 
@@ -33,7 +34,15 @@ const mailboxOptions = orpc.mail.getMailboxes.queryOptions();
 const mailboxesQuery = createQuery(mailboxOptions);
 const tabState = setTabState();
 const mailboxState = setMailboxState();
+const selectionState = setSelectionState();
 let mailbox = $state<Mailbox | null>();
+
+$effect(() => {
+	mailboxState.selected;
+	untrack(() => {
+        selectionState.clear();
+    });
+});
 
 onMount(() => {
 	loader.track(queryClient.fetchQuery(mailboxOptions)).catch(() => {});
@@ -63,7 +72,7 @@ $effect(() => {
 	}
 });
 
-function handleMailboxSelect(path: string) {
+function handleMailboxOpen(path: string) {
 	const m = $mailboxesQuery.data?.mailboxes.find((x) => x.path === path);
 	if (m) mailbox = m;
 	mailboxState.open(path);
@@ -96,7 +105,7 @@ function handleMailboxSelect(path: string) {
         <nav class="flex-1 overflow-y-auto p-3 pt-0.5 space-y-1">
             {#each $mailboxesQuery.data?.mailboxes ?? [] as mailbox}
                 <Button.Root
-                    onclick={() => handleMailboxSelect(mailbox.path)}
+                    onclick={() => handleMailboxOpen(mailbox.path)}
                     class="w-full flex text-sm transition-all px-2 py-1.5
                     {mailboxState.selected === mailbox.path
                         ? 'bg-neutral-800/75 text-white font-medium shadow-xxs'

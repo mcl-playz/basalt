@@ -8,17 +8,21 @@ import {
 	StarIcon,
 	TrashIcon,
 } from "phosphor-svelte";
-import type { MouseEventHandler } from "svelte/elements";
+import type { MouseEventHandler, ToggleEventHandler } from "svelte/elements";
 import { toast } from "svelte-sonner";
 import { mail } from "$lib/mail";
 import { getTabState } from "$lib/state/tabs.svelte";
 
 let {
 	message,
+    checked = $bindable(false),
 	onclick,
+    ontoggle,
 }: {
 	message: MessageMetadata;
-	onclick: MouseEventHandler<HTMLButtonElement>;
+    checked?: boolean;
+	onclick?: MouseEventHandler<HTMLButtonElement>;
+	ontoggle?: (value: boolean) => void;
 } = $props();
 
 let tabState = getTabState();
@@ -95,6 +99,8 @@ let starred = $derived(message.starred);
 		<Checkbox.Root
 			class="group/check text-sm font-medium size-7"
 			onclick={(e) => e.stopPropagation()}
+            bind:checked={checked}
+            onCheckedChange={ontoggle}
 		>
 			{#snippet children({ checked })}
 				<div>

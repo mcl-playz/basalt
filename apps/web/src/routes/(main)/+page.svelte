@@ -6,12 +6,14 @@ import { mail } from "$lib/mail";
 import { loader } from "$lib/state/loader.svelte";
 import { getMailboxState } from "$lib/state/mailbox.svelte";
 import { getTabState } from "$lib/state/tabs.svelte";
-import type { Message as MessageType } from "@basalt/types";
+import type { MessageKey, MessageMetadata, Message as MessageType } from "@basalt/types";
 import Message from "./message.svelte";
+import { getSelectionState } from "$lib/state/selection.svelte";
 
 const sessionQuery = authClient.useSession();
 const tabState = getTabState();
 const mailboxState = getMailboxState();
+const selectionState = getSelectionState();
 
 $effect(() => {
 	if (!$sessionQuery.isPending && !$sessionQuery.data) {
@@ -41,17 +43,21 @@ $effect(() => {
 		});
 });
 
-function handleMessageSelect(msg: MessageType) {
+function handleMessageOpen(msg: MessageType) {
 	const created = tabState.create({
 		type: "message",
 		key: msg,
 		title: msg.subject,
 	});
-    if (created && !msg.read) {
-        mail.setRead(msg, true).catch((err) => {
-            console.error("Failed to mark as read", err);
-        });
-    }
+	if (created && !msg.read) {
+		mail.setRead(msg, true).catch((err) => {
+			console.error("Failed to mark as read", err);
+		});
+	}
+}
+
+function handleMessageSelect(msg: MessageKey, selected: boolean) {
+    selectionState.setSelected(msg, selected);
 }
 </script>
 
@@ -64,7 +70,9 @@ function handleMessageSelect(msg: MessageType) {
 		{#each messages as message (message.uid)}
 			<MessageCard
 				{message}
-				onclick={() => handleMessageSelect(message)}
+				onclick={() => handleMessageOpen(message)}
+                checked={selectionState.isSelected(message)}
+                ontoggle={(selected) => handleMessageSelect(message, selected)}
 			/>
 		{/each}
 	</div>
