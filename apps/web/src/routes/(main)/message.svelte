@@ -101,7 +101,7 @@ function handleMessageDelete(){
 </script>
 
 {#snippet buttonSeparator()}
-    <div class="border-r border-neutral-600 rounded-full h-[65%] mt-1.5 m-0.5"></div>
+    <div class="mx-1 h-6 w-px bg-neutral-700 mt-1"></div>
 {/snippet}
 
 <svelte:window
