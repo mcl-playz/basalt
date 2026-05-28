@@ -97,7 +97,7 @@ let starred = $derived(message.starred);
 >
 	<div class="flex items-center gap-3">
 		<Checkbox.Root
-			class="group/check text-sm font-medium size-7"
+			class="group/check text-sm font-medium size-7 {starred && !checked ? "bg-amber-500/10" : ""}"
 			onclick={(e) => e.stopPropagation()}
             bind:checked={checked}
             onCheckedChange={ontoggle}
