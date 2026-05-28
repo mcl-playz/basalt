@@ -6,9 +6,14 @@ import { mail } from "$lib/mail";
 import { loader } from "$lib/state/loader.svelte";
 import { getMailboxState } from "$lib/state/mailbox.svelte";
 import { getTabState } from "$lib/state/tabs.svelte";
-import type { MessageKey, MessageMetadata, Message as MessageType } from "@basalt/types";
+import type {
+	MessageKey,
+	Message as MessageType,
+} from "@basalt/types";
 import Message from "./message.svelte";
 import { getSelectionState } from "$lib/state/selection.svelte";
+import SelectionToolbar from "$lib/components/SelectionToolbar.svelte";
+import { fly } from "svelte/transition";
 
 const sessionQuery = authClient.useSession();
 const tabState = getTabState();
@@ -57,7 +62,7 @@ function handleMessageOpen(msg: MessageType) {
 }
 
 function handleMessageSelect(msg: MessageKey, selected: boolean) {
-    selectionState.setSelected(msg, selected);
+	selectionState.setSelected(msg, selected);
 }
 </script>
 
@@ -65,17 +70,33 @@ function handleMessageSelect(msg: MessageKey, selected: boolean) {
 	<Message />
 {:else if tabState.activeTab?.type === "attachment"}
 	<div>attachment</div>
+{:else if !mailboxState.selected}
+    <br>
 {:else if messages.length > 0}
-	<div>
-		{#each messages as message (message.uid)}
-			<MessageCard
-				{message}
-				onclick={() => handleMessageOpen(message)}
-                checked={selectionState.isSelected(message)}
-                ontoggle={(selected) => handleMessageSelect(message, selected)}
-			/>
-		{/each}
-	</div>
+	<div class="relative min-h-full w-full">
+        <div>
+            {#each messages as message (message.uid)}
+                <MessageCard
+                    {message}
+                    onclick={() => handleMessageOpen(message)}
+                    checked={selectionState.isSelected(message)}
+                    ontoggle={(selected) => handleMessageSelect(message, selected)}
+                />
+            {/each}
+        </div>
+
+        {#if selectionState.selected.length > 0}
+            <div 
+                in:fly={{ y: 24, duration: 250 }}
+                out:fly={{ y: 24, duration: 250 }}
+                class="fixed left-64 right-2 bottom-6 z-50 flex justify-center pointer-events-none"
+            >
+                <div class="pointer-events-auto">
+                    <SelectionToolbar />
+                </div>
+            </div>
+        {/if}
+    </div>
 {:else}
 	<div
 		class="flex flex-col items-center justify-center h-32 text-neutral-500"
